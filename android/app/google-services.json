@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "37665738009",
+    "project_id": "tildesu-9a77e",
+    "storage_bucket": "tildesu-9a77e.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:37665738009:android:545344cc1885e9c6188988",
+        "android_client_info": {
+          "package_name": "com.ashim_bari.tildesu"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDfRkDazTmEadd1rcwIOHypAAzuM0R5Bmo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

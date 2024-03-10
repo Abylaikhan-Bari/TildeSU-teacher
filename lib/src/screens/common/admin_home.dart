@@ -11,11 +11,19 @@ class AdminHome extends StatefulWidget {
 class _AdminHomeState extends State<AdminHome> {
   int _selectedIndex = 0;
 
-  static List<Widget> _widgetOptions = <Widget>[
-    PuzzlesScreen(),
-    QuizzesScreen(),
-    TrueOrFalseScreen(),
-  ];
+  // Updated to a function to create a new instance of the screen on each call
+  Widget _getScreen(int index) {
+    switch (index) {
+      case 0:
+        return PuzzlesScreen();
+      case 1:
+        return QuizzesScreen();
+      case 2:
+        return TrueOrFalseScreen();
+      default:
+        return PuzzlesScreen(); // Default case
+    }
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -30,7 +38,8 @@ class _AdminHomeState extends State<AdminHome> {
         title: Text('TildeSU Admin'),
       ),
       body: Center(
-        child: _widgetOptions.elementAt(_selectedIndex),
+        // Dynamically get the current screen based on _selectedIndex
+        child: _getScreen(_selectedIndex),
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[

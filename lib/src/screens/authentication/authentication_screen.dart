@@ -11,10 +11,12 @@ class AuthenticationScreen extends StatefulWidget {
 }
 
 class _AuthenticationScreenState extends State<AuthenticationScreen> {
+  final _formKey = GlobalKey<FormState>(); // Add a key for the form
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _authService = AuthService();
   AuthFormType _authFormType = AuthFormType.signIn;
+  String _errorMessage = ''; // To display error messages
 
   @override
   void dispose() {
@@ -24,28 +26,28 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
   }
 
   void _auth() async {
-    String email = _emailController.text.trim();
-    String password = _passwordController.text.trim();
-
-    if (_authFormType == AuthFormType.signIn) {
-      User? user = await _authService.signIn(email, password);
-      if (user != null) {
-        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => AdminHome()));
-      } else {
-        // Handle login error
-      }
-    } else {
-      User? user = await _authService.signUp(email, password);
-      if (user != null) {
-        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => AdminHome()));
-      } else {
-        // Handle registration error
+    if (_formKey.currentState!.validate()) { // Check if the form is valid
+      try {
+        User? user;
+        if (_authFormType == AuthFormType.signIn) {
+          user = await _authService.signIn(_emailController.text.trim(), _passwordController.text.trim());
+        } else {
+          user = await _authService.signUp(_emailController.text.trim(), _passwordController.text.trim());
+        }
+        if (user != null) {
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => AdminHome()));
+        }
+      } on FirebaseAuthException catch (e) {
+        setState(() {
+          _errorMessage = e.message ?? 'An unknown error occurred'; // Set error message
+        });
       }
     }
   }
 
   void _toggleFormType() {
     setState(() {
+      _errorMessage = ''; // Clear error message when switching form type
       _authFormType = _authFormType == AuthFormType.signIn ? AuthFormType.signUp : AuthFormType.signIn;
     });
   }
@@ -57,28 +59,35 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
       appBar: AppBar(title: Text(isSignInForm ? 'Sign In' : 'Sign Up')),
       body: Padding(
         padding: EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(labelText: 'Email'),
-            ),
-            TextField(
-              controller: _passwordController,
-              decoration: InputDecoration(labelText: 'Password'),
-              obscureText: true,
-            ),
-            SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _auth,
-              child: Text(isSignInForm ? 'Sign In' : 'Sign Up'),
-            ),
-            TextButton(
-              onPressed: _toggleFormType,
-              child: Text(isSignInForm ? 'Need an account? Sign up' : 'Have an account? Sign in'),
-            ),
-          ],
+        child: Form(
+          key: _formKey, // Use the form key
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextFormField(
+                controller: _emailController,
+                decoration: InputDecoration(labelText: 'Email'),
+                validator: (value) => value!.isEmpty ? 'Please enter your email' : null, // Add validator
+              ),
+              TextFormField(
+                controller: _passwordController,
+                decoration: InputDecoration(labelText: 'Password'),
+                obscureText: true,
+                validator: (value) => value!.isEmpty ? 'Please enter your password' : null, // Add validator
+              ),
+              SizedBox(height: 24),
+              if (_errorMessage.isNotEmpty) // Display error message if not empty
+                Text(_errorMessage, style: TextStyle(color: Colors.red, fontSize: 14)),
+              ElevatedButton(
+                onPressed: _auth,
+                child: Text(isSignInForm ? 'Sign In' : 'Sign Up'),
+              ),
+              TextButton(
+                onPressed: _toggleFormType,
+                child: Text(isSignInForm ? 'Need an account? Sign up' : 'Have an account? Sign in'),
+              ),
+            ],
+          ),
         ),
       ),
     );
