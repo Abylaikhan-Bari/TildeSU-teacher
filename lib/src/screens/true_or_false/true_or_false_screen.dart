@@ -25,7 +25,7 @@ class _TrueOrFalseScreenState extends State<TrueOrFalseScreen> {
       };
 
       // Add to Firestore
-      FirebaseFirestore.instance.collection('exercises').add(exerciseData).then((result) {
+      FirebaseFirestore.instance.collection('levels').doc('A1').collection('trueOrFalse').add(exerciseData).then((result) {
         // Clear the form
         _clearForm();
       }).catchError((error) {

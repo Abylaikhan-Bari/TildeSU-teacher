@@ -39,7 +39,7 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
       };
 
       // Add to Firestore
-      FirebaseFirestore.instance.collection('exercises').add(exerciseData).then((result) {
+      FirebaseFirestore.instance.collection('levels').doc('A1').collection('quizzes').add(exerciseData).then((result) {
         // Clear the form or navigate away
         _clearForm();
       }).catchError((error) {

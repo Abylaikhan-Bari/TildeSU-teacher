@@ -1,5 +1,7 @@
 enum ExerciseType {
-  QUIZ, PUZZLES, TRUE_FALSE
+  QUIZ,
+  PUZZLES,
+  TRUE_FALSE,
 }
 
 class Exercise {
@@ -17,7 +19,7 @@ class Exercise {
 
   Exercise({
     this.id = '',
-    this.level = '',
+    required this.level,
     this.type,
     this.question,
     this.options,
@@ -32,15 +34,15 @@ class Exercise {
   Map<String, dynamic> toMap() {
     return {
       'level': level,
-      'type': type?.toString().split('.').last, // Convert enum to String
+      'type': type?.index, // Serialize enum as its index
       'question': question,
-      'options': options,
+      'options': options ?? [], // Provide default value for null options
       'correctOptionIndex': correctOptionIndex,
       // 'userSelectedOptionIndex' is not included as it's for local use and not stored in Firestore
       'statement': statement,
       'isTrue': isTrue,
-      'sentenceParts': sentenceParts,
-      'correctOrder': correctOrder,
+      'sentenceParts': sentenceParts ?? [], // Provide default value for null sentenceParts
+      'correctOrder': correctOrder ?? [], // Provide default value for null correctOrder
     };
   }
 
@@ -49,10 +51,7 @@ class Exercise {
     return Exercise(
       id: documentId,
       level: data['level'] as String,
-      type: ExerciseType.values.firstWhere(
-            (e) => e.toString() == 'ExerciseType.${data['type']}',
-        orElse: () => ExerciseType.QUIZ, // Default to QUIZ or handle accordingly
-      ),
+      type: ExerciseType.values[data['type'] as int],
       question: data['question'] as String?,
       options: List<String>.from(data['options'] as List? ?? []),
       correctOptionIndex: data['correctOptionIndex'] as int?,
