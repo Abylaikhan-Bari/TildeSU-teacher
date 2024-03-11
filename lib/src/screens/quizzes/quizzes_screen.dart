@@ -38,16 +38,19 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
         'correctOptionIndex': _correctOptionIndex,
       };
 
-      // Add to Firestore
-      FirebaseFirestore.instance.collection('levels').doc('A1').collection('quizzes').add(exerciseData).then((result) {
-        // Clear the form or navigate away
+      try {
+        await FirebaseFirestore.instance
+            .collection('levels')
+            .doc('A1')
+            .collection('quizzes')
+            .add(exerciseData);
         _clearForm();
-      }).catchError((error) {
+      } catch (error) {
         // Handle errors here
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to add quiz: $error')),
         );
-      });
+      }
     }
   }
 
@@ -60,6 +63,52 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
     setState(() {
       _correctOptionIndex = 0;
     });
+  }
+
+  Future<void> _updateQuiz(String quizId) async {
+    if (_formKey.currentState!.validate()) {
+      final exerciseData = {
+        'question': _questionController.text.trim(),
+        'options': [
+          _option1Controller.text.trim(),
+          _option2Controller.text.trim(),
+          _option3Controller.text.trim(),
+          _option4Controller.text.trim(),
+        ],
+        'correctOptionIndex': _correctOptionIndex,
+      };
+
+      try {
+        await FirebaseFirestore.instance
+            .collection('levels')
+            .doc('A1')
+            .collection('quizzes')
+            .doc(quizId)
+            .update(exerciseData);
+        _clearForm();
+      } catch (error) {
+        // Handle errors here
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update quiz: $error')),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteQuiz(String quizId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('levels')
+          .doc('A1')
+          .collection('quizzes')
+          .doc(quizId)
+          .delete();
+    } catch (error) {
+      // Handle errors here
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete quiz: $error')),
+      );
+    }
   }
 
   @override
@@ -88,7 +137,12 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
               ...List.generate(4, (index) {
                 // Generating text fields for 4 options
                 return TextFormField(
-                  controller: [ _option1Controller, _option2Controller, _option3Controller, _option4Controller ][index],
+                  controller: [
+                    _option1Controller,
+                    _option2Controller,
+                    _option3Controller,
+                    _option4Controller
+                  ][index],
                   decoration: InputDecoration(labelText: 'Option ${index + 1}'),
                   validator: (value) {
                     if (value == null || value.isEmpty) {

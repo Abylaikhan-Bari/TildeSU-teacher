@@ -24,16 +24,19 @@ class _TrueOrFalseScreenState extends State<TrueOrFalseScreen> {
         'isTrue': _isTrue,
       };
 
-      // Add to Firestore
-      FirebaseFirestore.instance.collection('levels').doc('A1').collection('trueOrFalse').add(exerciseData).then((result) {
-        // Clear the form
+      try {
+        await FirebaseFirestore.instance
+            .collection('levels')
+            .doc('A1')
+            .collection('trueOrFalse')
+            .add(exerciseData);
         _clearForm();
-      }).catchError((error) {
+      } catch (error) {
         // Handle errors here
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to add true or false exercise: $error')),
         );
-      });
+      }
     }
   }
 
@@ -42,6 +45,46 @@ class _TrueOrFalseScreenState extends State<TrueOrFalseScreen> {
     setState(() {
       _isTrue = true;
     });
+  }
+
+  Future<void> _updateTrueOrFalseExercise(String exerciseId) async {
+    if (_formKey.currentState!.validate()) {
+      final exerciseData = {
+        'statement': _statementController.text.trim(),
+        'isTrue': _isTrue,
+      };
+
+      try {
+        await FirebaseFirestore.instance
+            .collection('levels')
+            .doc('A1')
+            .collection('trueOrFalse')
+            .doc(exerciseId)
+            .update(exerciseData);
+        _clearForm();
+      } catch (error) {
+        // Handle errors here
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update true or false exercise: $error')),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteTrueOrFalseExercise(String exerciseId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('levels')
+          .doc('A1')
+          .collection('trueOrFalse')
+          .doc(exerciseId)
+          .delete();
+    } catch (error) {
+      // Handle errors here
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete true or false exercise: $error')),
+      );
+    }
   }
 
   @override
