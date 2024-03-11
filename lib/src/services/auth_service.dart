@@ -6,22 +6,27 @@ class AuthService {
   // Sign Up with Email and Password
   Future<User?> signUp(String email, String password) async {
     try {
-      UserCredential result = await _firebaseAuth.createUserWithEmailAndPassword(email: email, password: password);
+      UserCredential result = await _firebaseAuth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
       return result.user;
-    } catch (e) {
-      print(e);
-      return null;
+    } on FirebaseAuthException catch (e) {
+      print(e.code);
+      rethrow; // Propagate the error
     }
   }
 
-  // Sign In with Email and Password
   Future<User?> signIn(String email, String password) async {
     try {
-      UserCredential result = await _firebaseAuth.signInWithEmailAndPassword(email: email, password: password);
+      UserCredential result = await _firebaseAuth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
       return result.user;
-    } catch (e) {
-      print(e);
-      return null;
+    } on FirebaseAuthException catch (e) {
+      print(e.code);
+      rethrow; // Propagate the error
     }
   }
 
