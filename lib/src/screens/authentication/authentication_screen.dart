@@ -69,40 +69,55 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
   Widget build(BuildContext context) {
     final isSignInForm = _authFormType == AuthFormType.signIn;
     return Scaffold(
-        appBar: AppBar(title: Text(isSignInForm ? 'Sign In' : 'Sign Up')),
-    body: Padding(
-    padding: EdgeInsets.all(16),
-    child: Form(
-    key: _formKey, // Use the form key
-    child: Column(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-    TextFormField(
-    controller: _emailController,
-    decoration: InputDecoration(labelText: 'Email'),
-    validator: (value) => (value == null || value.isEmpty) ? 'Please enter your email' : null,
-    ),
-    TextFormField(
-    controller: _passwordController,
-    decoration: InputDecoration(labelText: 'Password'),
-    obscureText: true,
-    validator: (value) => (value == null || value.isEmpty) ? 'Please enter your password' : null,
-    ),
-    SizedBox(height: 24),
-    if (_errorMessage.isNotEmpty) // Display error message if not empty
-    Text(_errorMessage, style: TextStyle(color: Colors.red, fontSize: 14)),
-    ElevatedButton(
-    onPressed: _auth,
-    child: Text(isSignInForm ? 'Sign In' : 'Sign Up'),
-    ),
-    TextButton(
-    onPressed: _toggleFormType,
-    child: Text(isSignInForm ? 'Need an account? Sign up' : 'Have an account? Sign in')
-    ),
-    ],
-    ),
-    ),
-    ),
+      appBar: AppBar(title: Text(isSignInForm ? 'Sign In' : 'Sign Up')),
+      body: Padding(
+        padding: EdgeInsets.all(16),
+        child: Form(
+          key: _formKey, // Use the form key
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Card(
+                elevation: 4,
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: TextFormField(
+                    controller: _emailController,
+                    decoration: InputDecoration(labelText: 'Email'),
+                    validator: (value) => (value == null || value.isEmpty) ? 'Please enter your email' : null,
+                  ),
+                ),
+              ),
+              Card(
+                elevation: 4,
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: TextFormField(
+                    controller: _passwordController,
+                    decoration: InputDecoration(labelText: 'Password'),
+                    obscureText: true,
+                    validator: (value) => (value == null || value.isEmpty) ? 'Please enter your password' : null,
+                  ),
+                ),
+              ),
+              SizedBox(height: 24),
+              if (_errorMessage.isNotEmpty) // Display error message if not empty
+                Text(_errorMessage, style: TextStyle(color: Colors.red, fontSize: 14)),
+              Card(
+                elevation: 4,
+                child: ElevatedButton(
+                  onPressed: _auth,
+                  child: Text(isSignInForm ? 'Sign In' : 'Sign Up'),
+                ),
+              ),
+              TextButton(
+                  onPressed: _toggleFormType,
+                  child: Text(isSignInForm ? 'Need an account? Sign up' : 'Have an account? Sign in')
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
