@@ -97,19 +97,42 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
   }
 
   Future<void> _deleteQuiz(String quizId) async {
-    try {
-      await FirebaseFirestore.instance
-          .collection('levels')
-          .doc(_selectedLevel)
-          .collection('quizzes')
-          .doc(quizId)
-          .delete();
-    } catch (error) {
-      // Handle errors here
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete quiz: $error')),
-      );
-    }
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete Quiz'),
+          content: Text('Are you sure you want to delete this quiz?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                try {
+                  await FirebaseFirestore.instance
+                      .collection('levels')
+                      .doc(_selectedLevel)
+                      .collection('quizzes')
+                      .doc(quizId)
+                      .delete();
+                  Navigator.of(context).pop();
+                } catch (error) {
+                  // Handle error
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to delete quiz: $error')),
+                  );
+                }
+              },
+              child: Text('Yes'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -156,14 +179,56 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
                       return ListTile(
                         title: Text('Quiz ${quiz.id}'),
                         onTap: () {
-                          // Implement functionality to view or edit quiz details
-                          // For simplicity, let's just fill the form with quiz data for now
+                          // Show dialog to update quiz
                           _questionController.text = quiz['question'];
                           _option1Controller.text = quiz['options'][0];
                           _option2Controller.text = quiz['options'][1];
                           _option3Controller.text = quiz['options'][2];
                           _option4Controller.text = quiz['options'][3];
                           _correctOptionIndex = quiz['correctOptionIndex'];
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: Text('Update Quiz'),
+                                content: Form(
+                                  key: _formKey,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      TextFormField(
+                                        controller: _questionController,
+                                        decoration: InputDecoration(labelText: 'Question'),
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return 'Please enter a question';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                      // Add TextFormField for options and correct option index here
+                                    ],
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      _updateQuiz(quiz.id);
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: Text('Update'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
                         },
                         trailing: IconButton(
                           icon: Icon(Icons.delete),
@@ -181,7 +246,51 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _addQuiz,
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text('Add Quiz'),
+                content: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextFormField(
+                        controller: _questionController,
+                        decoration: InputDecoration(labelText: 'Question'),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a question';
+                          }
+                          return null;
+                        },
+                      ),
+                      // Add TextFormField for options and correct option index here
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      _addQuiz();
+                      Navigator.of(context).pop();
+                    },
+                    child: Text('Add'),
+                  ),
+                ],
+              );
+            },
+          );
+        },
         child: Icon(Icons.add),
       ),
     );
