@@ -1,0 +1,1 @@
+ C:\\Users\\Abylaikhan\ Bari\\Documents\\Diploma\\TildeSU_teacher\\.dart_tool\\flutter_build\\8edafdb331c41bab04031dafb19ffb89\\native_assets.yaml: 
