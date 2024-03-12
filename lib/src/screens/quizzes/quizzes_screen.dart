@@ -197,7 +197,9 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator();
+                  return Center(
+                    child: CircularProgressIndicator(),
+                  );
                 } else {
                   final quizzes = snapshot.data!.docs;
                   return ListView.builder(
