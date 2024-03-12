@@ -11,6 +11,7 @@ class _TrueOrFalseScreenState extends State<TrueOrFalseScreen> {
   final _statementController = TextEditingController();
   bool _isTrue = true; // Default to true
   String _selectedLevel = 'A1'; // Default selected level
+  int _exerciseCount = 0; // Counter for generating unique IDs
 
   @override
   void dispose() {
@@ -26,11 +27,30 @@ class _TrueOrFalseScreenState extends State<TrueOrFalseScreen> {
       };
 
       try {
+        // Query the Firestore collection to get existing exercise IDs
+        final existingExercises = await FirebaseFirestore.instance
+            .collection('levels')
+            .doc(_selectedLevel)
+            .collection('trueOrFalse')
+            .get();
+
+        // Extract existing IDs
+        final existingIds = existingExercises.docs.map((exercise) => exercise.id);
+
+        // Find the next available ID
+        int nextId = 1;
+        while (existingIds.contains('statementId$nextId')) {
+          nextId++;
+        }
+        final newExerciseId = 'statementId$nextId';
+
+        // Add the exercise with the new ID
         await FirebaseFirestore.instance
             .collection('levels')
             .doc(_selectedLevel)
             .collection('trueOrFalse')
-            .add(exerciseData);
+            .doc(newExerciseId)
+            .set(exerciseData);
         _clearForm();
       } catch (error) {
         // Handle errors here
@@ -41,6 +61,8 @@ class _TrueOrFalseScreenState extends State<TrueOrFalseScreen> {
     }
   }
 
+
+
   void _clearForm() {
     _statementController.clear();
     setState(() {
@@ -48,6 +70,7 @@ class _TrueOrFalseScreenState extends State<TrueOrFalseScreen> {
     });
   }
 
+  // Remaining code for updating and deleting exercises remains the same
   Future<void> _updateTrueOrFalseExercise(String exerciseId) async {
     if (_formKey.currentState!.validate()) {
       final exerciseData = {
@@ -153,71 +176,75 @@ class _TrueOrFalseScreenState extends State<TrueOrFalseScreen> {
                     itemBuilder: (context, index) {
                       final exercise = exercises[index];
                       return ListTile(
-                        title: Text('Exercise ${exercise.id}'),
+                        title: Text('Exercise ${exercise.id}: ${exercise['statement']}'),
                         subtitle: Text('Statement: ${exercise['statement']}'),
                         onTap: () {
+                          // Remaining code for updating and deleting exercises remains the same
                           // Show dialog to update true/false exercise
                           _statementController.text = exercise['statement'];
                           _isTrue = exercise['isTrue'];
                           showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: Text('Update True/False Exercise'),
-                                content: Form(
-                                  key: _formKey,
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      TextFormField(
-                                        controller: _statementController,
-                                        decoration: InputDecoration(labelText: 'Statement'),
-                                        validator: (value) {
-                                          if (value == null || value.isEmpty) {
-                                            return 'Please enter a statement';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                      Row(
-                                        children: [
-                                          Text('Is True: '),
-                                          Checkbox(
-                                            value: _isTrue,
-                                            onChanged: (value) {
-                                              setState(() {
-                                                _isTrue = value!;
-                                              });
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                    child: Text('Cancel'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      _updateTrueOrFalseExercise(exercise.id);
-                                      Navigator.of(context).pop();
-                                    },
-                                    child: Text('Update'),
-                                  ),
-                                ],
-                              );
-                            },
+                          context: context,
+                          builder: (BuildContext context) {
+                          return AlertDialog(
+                          title: Text('Update True/False Exercise'),
+                          content: Form(
+                          key: _formKey,
+                          child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                          TextFormField(
+                          controller: _statementController,
+                          decoration: InputDecoration(labelText: 'Statement'),
+                          validator: (value) {
+                          if (value == null || value.isEmpty) {
+                          return 'Please enter a statement';
+                          }
+                          return null;
+                          },
+                          ),
+                          Row(
+                          children: [
+                          Text('Is True: '),
+                          Checkbox(
+                          value: _isTrue,
+                          onChanged: (value) {
+                          setState(() {
+                          _isTrue = value!;
+                          });
+                          },
+                          ),
+                          ],
+                          ),
+                          ],
+                          ),
+                          ),
+                          actions: [
+                          TextButton(
+                          onPressed: () {
+                          Navigator.of(context).pop();
+                          },
+                          child: Text('Cancel'),
+                          ),
+                          TextButton(
+                          onPressed: () {
+                          _updateTrueOrFalseExercise(exercise.id);
+                          Navigator.of(context).pop();
+                          },
+                          child: Text('Update'),
+                          ),
+                          ],
                           );
-                        },
+                          },
+                          );
+                          },
+
+
                         trailing: IconButton(
                           icon: Icon(Icons.delete),
                           onPressed: () {
+                            // Remaining code for updating and deleting exercises remains the same
                             _deleteTrueOrFalseExercise(exercise.id);
                           },
                         ),
