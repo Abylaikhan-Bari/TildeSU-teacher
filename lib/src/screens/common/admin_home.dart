@@ -15,13 +15,13 @@ class _AdminHomeState extends State<AdminHome> {
   Widget _getScreen(int index) {
     switch (index) {
       case 0:
-        return PuzzlesScreen();
-      case 1:
         return QuizzesScreen();
+      case 1:
+        return PuzzlesScreen();
       case 2:
         return TrueOrFalseScreen();
       default:
-        return PuzzlesScreen(); // Default case
+        return QuizzesScreen(); // Default case
     }
   }
 
@@ -43,13 +43,14 @@ class _AdminHomeState extends State<AdminHome> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.extension),
-            label: 'Puzzles',
-          ),
+
           BottomNavigationBarItem(
             icon: Icon(Icons.question_answer),
             label: 'Quizzes',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.extension),
+            label: 'Puzzles',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.check_circle_outline),

@@ -26,9 +26,9 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
     super.dispose();
   }
 
-  void _addQuiz() async {
+  Future<void> _addQuiz() async {
     if (_formKey.currentState!.validate()) {
-      final exerciseData = {
+      final quizData = {
         'question': _questionController.text.trim(),
         'options': [
           _option1Controller.text.trim(),
@@ -36,24 +36,44 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
           _option3Controller.text.trim(),
           _option4Controller.text.trim(),
         ],
-        'correctOptionIndex': _correctOptionIndex,
+        'correctOptionIndex': _correctOptionIndex, // This is already an int
       };
+
+      // Retrieve all quiz document IDs to find the highest number
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('levels')
+          .doc(_selectedLevel)
+          .collection('quizzes')
+          .get();
+
+      final List<DocumentSnapshot> documents = querySnapshot.docs;
+      // Find the last quiz ID
+      int highestId = documents.fold<int>(0, (previousValue, document) {
+        final idString = document.id.replaceAll(RegExp(r'[^0-9]'), '');
+        final id = int.tryParse(idString) ?? 0;
+        return id > previousValue ? id : previousValue;
+      });
+
+      // Generate the next quiz ID
+      final nextQuizId = 'quizId${highestId + 1}';
 
       try {
         await FirebaseFirestore.instance
             .collection('levels')
             .doc(_selectedLevel)
             .collection('quizzes')
-            .add(exerciseData);
+            .doc(nextQuizId) // Use the next available ID
+            .set(quizData);
+
         _clearForm();
       } catch (error) {
-        // Handle errors here
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to add quiz: $error')),
         );
       }
     }
   }
+
 
   void _clearForm() {
     _questionController.clear();
@@ -68,7 +88,7 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
 
   Future<void> _updateQuiz(String quizId) async {
     if (_formKey.currentState!.validate()) {
-      final exerciseData = {
+      final quizData = {
         'question': _questionController.text.trim(),
         'options': [
           _option1Controller.text.trim(),
@@ -76,7 +96,7 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
           _option3Controller.text.trim(),
           _option4Controller.text.trim(),
         ],
-        'correctOptionIndex': _correctOptionIndex,
+        'correctOptionIndex': _correctOptionIndex, // Make sure this is set as an int
       };
 
       try {
@@ -84,17 +104,18 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
             .collection('levels')
             .doc(_selectedLevel)
             .collection('quizzes')
-            .doc(quizId)
-            .update(exerciseData);
+            .doc(quizId) // Use the existing quiz ID
+            .update(quizData);
+
         _clearForm();
       } catch (error) {
-        // Handle errors here
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to update quiz: $error')),
         );
       }
     }
   }
+
 
   Future<void> _deleteQuiz(String quizId) async {
     await showDialog(
@@ -207,7 +228,62 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
                                           return null;
                                         },
                                       ),
-                                      // Add TextFormField for options and correct option index here
+                                      TextFormField(
+                                        controller: _option1Controller,
+                                        decoration: InputDecoration(labelText: 'Option 1'),
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return 'Please enter option 1';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                      TextFormField(
+                                        controller: _option2Controller,
+                                        decoration: InputDecoration(labelText: 'Option 2'),
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return 'Please enter option 2';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                      TextFormField(
+                                        controller: _option3Controller,
+                                        decoration: InputDecoration(labelText: 'Option 3'),
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return 'Please enter option 3';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                      TextFormField(
+                                        controller: _option4Controller,
+                                        decoration: InputDecoration(labelText: 'Option 4'),
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return 'Please enter option 4';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                      TextFormField(
+                                        initialValue: _correctOptionIndex.toString(),
+                                        decoration: InputDecoration(labelText: 'Correct Option Index'),
+                                        keyboardType: TextInputType.number,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _correctOptionIndex = int.tryParse(value) ?? 0;
+                                          });
+                                        },
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return 'Please enter the correct option index';
+                                          }
+                                          return null;
+                                        },
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -268,7 +344,61 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
                           return null;
                         },
                       ),
-                      // Add TextFormField for options and correct option index here
+                      TextFormField(
+                        controller: _option1Controller,
+                        decoration: InputDecoration(labelText: 'Option 1'),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter option 1';
+                          }
+                          return null;
+                        },
+                      ),
+                      TextFormField(
+                        controller: _option2Controller,
+                        decoration: InputDecoration(labelText: 'Option 2'),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter option 2';
+                          }
+                          return null;
+                        },
+                      ),
+                      TextFormField(
+                        controller: _option3Controller,
+                        decoration: InputDecoration(labelText: 'Option 3'),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter option 3';
+                          }
+                          return null;
+                        },
+                      ),
+                      TextFormField(
+                        controller: _option4Controller,
+                        decoration: InputDecoration(labelText: 'Option 4'),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter option 4';
+                          }
+                          return null;
+                        },
+                      ),
+                      TextFormField(
+                        decoration: InputDecoration(labelText: 'Correct Option Index'),
+                        keyboardType: TextInputType.number,
+                        onChanged: (value) {
+                          setState(() {
+                            _correctOptionIndex = int.tryParse(value) ?? 0;
+                          });
+                        },
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter the correct option index';
+                          }
+                          return null;
+                        },
+                      ),
                     ],
                   ),
                 ),
