@@ -14,6 +14,7 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
   final _option3Controller = TextEditingController();
   final _option4Controller = TextEditingController();
   int _correctOptionIndex = 0; // Index of the correct option
+  String _selectedLevel = 'A1'; // Default selected level
 
   @override
   void dispose() {
@@ -41,7 +42,7 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
       try {
         await FirebaseFirestore.instance
             .collection('levels')
-            .doc('A1')
+            .doc(_selectedLevel)
             .collection('quizzes')
             .add(exerciseData);
         _clearForm();
@@ -81,7 +82,7 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
       try {
         await FirebaseFirestore.instance
             .collection('levels')
-            .doc('A1')
+            .doc(_selectedLevel)
             .collection('quizzes')
             .doc(quizId)
             .update(exerciseData);
@@ -99,7 +100,7 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
     try {
       await FirebaseFirestore.instance
           .collection('levels')
-          .doc('A1')
+          .doc(_selectedLevel)
           .collection('quizzes')
           .doc(quizId)
           .delete();
@@ -115,69 +116,73 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add Quiz Exercise'),
+        title: Text('Quizzes for Level $_selectedLevel'),
       ),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              TextFormField(
-                controller: _questionController,
-                decoration: InputDecoration(labelText: 'Question'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter the question';
-                  }
-                  return null;
-                },
-              ),
-              ...List.generate(4, (index) {
-                // Generating text fields for 4 options
-                return TextFormField(
-                  controller: [
-                    _option1Controller,
-                    _option2Controller,
-                    _option3Controller,
-                    _option4Controller
-                  ][index],
-                  decoration: InputDecoration(labelText: 'Option ${index + 1}'),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter an option';
-                    }
-                    return null;
-                  },
-                );
-              }),
-              DropdownButtonFormField<int>(
-                value: _correctOptionIndex,
-                onChanged: (int? newValue) {
-                  setState(() {
-                    _correctOptionIndex = newValue!;
-                  });
-                },
-                items: List<DropdownMenuItem<int>>.generate(
-                  4, // The number of options
-                      (index) => DropdownMenuItem<int>(
-                    value: index,
-                    child: Text('Option ${index + 1}'),
-                  ),
-                ),
-                decoration: InputDecoration(labelText: 'Correct Option'),
-              ),
-              SizedBox(height: 20),
-              Center(
-                child: ElevatedButton(
-                  onPressed: _addQuiz,
-                  child: Text('Add Quiz'),
-                ),
-              ),
-            ],
+      body: Column(
+        children: [
+          DropdownButton<String>(
+            value: _selectedLevel,
+            onChanged: (String? newValue) {
+              if (newValue != null) {
+                setState(() {
+                  _selectedLevel = newValue;
+                });
+              }
+            },
+            items: <String>['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] // Add more levels if needed
+                .map<DropdownMenuItem<String>>((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(value),
+              );
+            }).toList(),
           ),
-        ),
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('levels')
+                  .doc(_selectedLevel)
+                  .collection('quizzes')
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return CircularProgressIndicator();
+                } else {
+                  final quizzes = snapshot.data!.docs;
+                  return ListView.builder(
+                    itemCount: quizzes.length,
+                    itemBuilder: (context, index) {
+                      final quiz = quizzes[index];
+                      return ListTile(
+                        title: Text('Quiz ${quiz.id}'),
+                        onTap: () {
+                          // Implement functionality to view or edit quiz details
+                          // For simplicity, let's just fill the form with quiz data for now
+                          _questionController.text = quiz['question'];
+                          _option1Controller.text = quiz['options'][0];
+                          _option2Controller.text = quiz['options'][1];
+                          _option3Controller.text = quiz['options'][2];
+                          _option4Controller.text = quiz['options'][3];
+                          _correctOptionIndex = quiz['correctOptionIndex'];
+                        },
+                        trailing: IconButton(
+                          icon: Icon(Icons.delete),
+                          onPressed: () {
+                            _deleteQuiz(quiz.id);
+                          },
+                        ),
+                      );
+                    },
+                  );
+                }
+              },
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _addQuiz,
+        child: Icon(Icons.add),
       ),
     );
   }

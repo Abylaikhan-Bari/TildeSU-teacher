@@ -10,6 +10,7 @@ class _TrueOrFalseScreenState extends State<TrueOrFalseScreen> {
   final _formKey = GlobalKey<FormState>();
   final _statementController = TextEditingController();
   bool _isTrue = true; // Default to true
+  String _selectedLevel = 'A1'; // Default selected level
 
   @override
   void dispose() {
@@ -27,7 +28,7 @@ class _TrueOrFalseScreenState extends State<TrueOrFalseScreen> {
       try {
         await FirebaseFirestore.instance
             .collection('levels')
-            .doc('A1')
+            .doc(_selectedLevel)
             .collection('trueOrFalse')
             .add(exerciseData);
         _clearForm();
@@ -57,7 +58,7 @@ class _TrueOrFalseScreenState extends State<TrueOrFalseScreen> {
       try {
         await FirebaseFirestore.instance
             .collection('levels')
-            .doc('A1')
+            .doc(_selectedLevel)
             .collection('trueOrFalse')
             .doc(exerciseId)
             .update(exerciseData);
@@ -75,7 +76,7 @@ class _TrueOrFalseScreenState extends State<TrueOrFalseScreen> {
     try {
       await FirebaseFirestore.instance
           .collection('levels')
-          .doc('A1')
+          .doc(_selectedLevel)
           .collection('trueOrFalse')
           .doc(exerciseId)
           .delete();
@@ -91,44 +92,64 @@ class _TrueOrFalseScreenState extends State<TrueOrFalseScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add True/False Exercise'),
+        title: Text('True/False Exercises for Level $_selectedLevel'),
       ),
-      body: Form(
-        key: _formKey,
-        child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              TextFormField(
-                controller: _statementController,
-                decoration: InputDecoration(labelText: 'Statement'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a statement';
-                  }
-                  return null;
-                },
-              ),
-              SwitchListTile(
-                title: const Text('Is True'),
-                value: _isTrue,
-                onChanged: (bool val) {
-                  setState(() {
-                    _isTrue = val;
-                  });
-                },
-              ),
-              SizedBox(height: 20),
-              Center(
-                child: ElevatedButton(
-                  onPressed: _addTrueOrFalseExercise,
-                  child: Text('Add Exercise'),
-                ),
-              ),
-            ],
+      body: Column(
+        children: [
+          DropdownButton<String>(
+            value: _selectedLevel,
+            onChanged: (String? newValue) {
+              if (newValue != null) {
+                setState(() {
+                  _selectedLevel = newValue;
+                });
+              }
+            },
+            items: <String>['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] // Add more levels if needed
+                .map<DropdownMenuItem<String>>((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(value),
+              );
+            }).toList(),
           ),
-        ),
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('levels')
+                  .doc(_selectedLevel)
+                  .collection('trueOrFalse')
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return CircularProgressIndicator();
+                } else {
+                  final exercises = snapshot.data!.docs;
+                  return ListView.builder(
+                    itemCount: exercises.length,
+                    itemBuilder: (context, index) {
+                      final exercise = exercises[index];
+                      return ListTile(
+                        title: Text('Exercise ${exercise.id}'),
+                        subtitle: Text('Statement: ${exercise['statement']}'),
+                        trailing: IconButton(
+                          icon: Icon(Icons.delete),
+                          onPressed: () {
+                            _deleteTrueOrFalseExercise(exercise.id);
+                          },
+                        ),
+                      );
+                    },
+                  );
+                }
+              },
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _addTrueOrFalseExercise,
+        child: Icon(Icons.add),
       ),
     );
   }

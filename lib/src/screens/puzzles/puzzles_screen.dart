@@ -9,8 +9,8 @@ class PuzzlesScreen extends StatefulWidget {
 class _PuzzlesScreenState extends State<PuzzlesScreen> {
   String _selectedLevel = 'A1'; // Default selected level
   final _formKey = GlobalKey<FormState>();
-  final _sentencePartsController = TextEditingController();
-  final _correctOrderController = TextEditingController();
+  TextEditingController _sentencePartsController = TextEditingController();
+  TextEditingController _correctOrderController = TextEditingController();
 
   @override
   void dispose() {
@@ -19,33 +19,96 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
     super.dispose();
   }
 
-  void _addPuzzle() async {
-    if (_formKey.currentState!.validate()) {
-      List<String> sentenceParts = _sentencePartsController.text.split(',');
-      List<int> correctOrder = _correctOrderController.text
-          .split(',')
-          .map((s) => int.tryParse(s.trim())!)
-          .toList();
+  Future<void> _addPuzzle() async {
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Enter Puzzle Details'),
+          content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextFormField(
+                  controller: _sentencePartsController,
+                  decoration: InputDecoration(labelText: 'Sentence Parts (comma-separated)'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter sentence parts';
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: _correctOrderController,
+                  decoration: InputDecoration(labelText: 'Correct Order (comma-separated indexes)'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter the correct order';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (_formKey.currentState!.validate()) {
+                  List<String> sentenceParts = _sentencePartsController.text.split(',');
+                  List<int> correctOrder = _correctOrderController.text
+                      .split(',')
+                      .map((s) => int.tryParse(s.trim())!)
+                      .toList();
 
-      final exerciseData = {
-        'sentenceParts': sentenceParts,
-        'correctOrder': correctOrder,
-      };
+                  final exerciseData = {
+                    'sentenceParts': sentenceParts,
+                    'correctOrder': correctOrder,
+                  };
 
-      try {
-        await FirebaseFirestore.instance
-            .collection('levels')
-            .doc(_selectedLevel)
-            .collection('puzzles')
-            .add(exerciseData);
-        _clearForm();
-      } catch (error) {
-        // Handle errors here
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add puzzle: $error')),
+                  try {
+                    // Generate a unique puzzle ID
+                    final puzzleCount = await FirebaseFirestore.instance
+                        .collection('levels')
+                        .doc(_selectedLevel)
+                        .collection('puzzles')
+                        .get()
+                        .then((value) => value.docs.length);
+
+                    final puzzleId = 'puzzleId${puzzleCount + 1}';
+
+                    await FirebaseFirestore.instance
+                        .collection('levels')
+                        .doc(_selectedLevel)
+                        .collection('puzzles')
+                        .doc(puzzleId)
+                        .set(exerciseData);
+
+                    _clearForm();
+                    Navigator.of(context).pop();
+                  } catch (error) {
+                    // Handle errors here
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to add puzzle: $error')),
+                    );
+                  }
+                }
+              },
+              child: Text('Add Puzzle'),
+            ),
+          ],
         );
-      }
-    }
+      },
+    );
   }
 
   void _clearForm() {
@@ -53,104 +116,86 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
     _correctOrderController.clear();
   }
 
-  Future<void> _updatePuzzle(String puzzleId) async {
-    if (_formKey.currentState!.validate()) {
-      List<String> sentenceParts = _sentencePartsController.text.split(',');
-      List<int> correctOrder = _correctOrderController.text
-          .split(',')
-          .map((s) => int.tryParse(s.trim())!)
-          .toList();
-
-      final exerciseData = {
-        'sentenceParts': sentenceParts,
-        'correctOrder': correctOrder,
-      };
-
-      try {
-        await FirebaseFirestore.instance
-            .collection('levels')
-            .doc(_selectedLevel)
-            .collection('puzzles')
-            .doc(puzzleId)
-            .update(exerciseData);
-        _clearForm();
-      } catch (error) {
-        // Handle errors here
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update puzzle: $error')),
+  Future<void> _updatePuzzle(String puzzleId, List<String> sentenceParts, List<int> correctOrder) async {
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Update Puzzle'),
+          content: Text('Are you sure you want to update this puzzle?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () async {
+                try {
+                  // Perform update operation here
+                  // Example:
+                  // await FirebaseFirestore.instance
+                  //     .collection('levels')
+                  //     .doc(_selectedLevel)
+                  //     .collection('puzzles')
+                  //     .doc(puzzleId)
+                  //     .update({
+                  //   'sentenceParts': sentenceParts,
+                  //   'correctOrder': correctOrder,
+                  // });
+                  Navigator.of(context).pop();
+                } catch (error) {
+                  // Handle error
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to update puzzle: $error')),
+                  );
+                }
+              },
+              child: Text('Yes'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('No'),
+            ),
+          ],
         );
-      }
-    }
+      },
+    );
   }
 
   Future<void> _deletePuzzle(String puzzleId) async {
-    try {
-      await FirebaseFirestore.instance
-          .collection('levels')
-          .doc(_selectedLevel)
-          .collection('puzzles')
-          .doc(puzzleId)
-          .delete();
-    } catch (error) {
-      // Handle errors here
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete puzzle: $error')),
-      );
-    }
-  }
-
-  void _showDetailsDialog(String puzzleId, List<String> sentenceParts, List<int> correctOrder) {
-    showDialog(
+    await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Puzzle Details'),
-        content: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextFormField(
-                controller: _sentencePartsController,
-                decoration: InputDecoration(labelText: 'Sentence Parts (comma-separated)'),
-                initialValue: sentenceParts.join(','),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter sentence parts';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _correctOrderController,
-                decoration: InputDecoration(labelText: 'Correct Order (comma-separated indexes)'),
-                initialValue: correctOrder.join(','),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter the correct order';
-                  }
-                  return null;
-                },
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              _updatePuzzle(puzzleId);
-              Navigator.of(context).pop();
-            },
-            child: Text('Update'),
-          ),
-        ],
-      ),
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete Puzzle'),
+          content: Text('Are you sure you want to delete this puzzle?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () async {
+                try {
+                  await FirebaseFirestore.instance
+                      .collection('levels')
+                      .doc(_selectedLevel)
+                      .collection('puzzles')
+                      .doc(puzzleId)
+                      .delete();
+                  Navigator.of(context).pop();
+                } catch (error) {
+                  // Handle error
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to delete puzzle: $error')),
+                  );
+                }
+              },
+              child: Text('Yes'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('No'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -221,6 +266,62 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: _addPuzzle,
         child: Icon(Icons.add),
+      ),
+    );
+  }
+
+  void _showDetailsDialog(String puzzleId, List<String> sentenceParts, List<int> correctOrder) {
+    _sentencePartsController.text = sentenceParts.join(',');
+    _correctOrderController.text = correctOrder.join(',');
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Puzzle Details'),
+        content: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextFormField(
+                controller: _sentencePartsController,
+                decoration: InputDecoration(labelText: 'Sentence Parts (comma-separated)'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter sentence parts';
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: _correctOrderController,
+                decoration: InputDecoration(labelText: 'Correct Order (comma-separated indexes)'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter the correct order';
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              _updatePuzzle(puzzleId, sentenceParts, correctOrder);
+              Navigator.of(context).pop();
+            },
+            child: Text('Update'),
+          ),
+        ],
       ),
     );
   }
