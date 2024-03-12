@@ -156,11 +156,18 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
     );
   }
 
+  String _translate(String key) {
+    // Here you would implement logic to translate the key to the appropriate language
+    // For now, let's return the key as is
+    return key;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Quizzes for Level $_selectedLevel'),
+        title: Text(_translate('Quizzes for Level') + ' $_selectedLevel'),
+        backgroundColor: Color(0xFF34559C), // Set the app bar color to #34559C
       ),
       body: Column(
         children: [
@@ -197,120 +204,122 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
                     itemCount: quizzes.length,
                     itemBuilder: (context, index) {
                       final quiz = quizzes[index];
-                      return ListTile(
-                        title: Text('Quiz ${quiz.id}'),
-                        onTap: () {
-                          // Show dialog to update quiz
-                          _questionController.text = quiz['question'];
-                          _option1Controller.text = quiz['options'][0];
-                          _option2Controller.text = quiz['options'][1];
-                          _option3Controller.text = quiz['options'][2];
-                          _option4Controller.text = quiz['options'][3];
-                          _correctOptionIndex = quiz['correctOptionIndex'];
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: Text('Update Quiz'),
-                                content: Form(
-                                  key: _formKey,
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      TextFormField(
-                                        controller: _questionController,
-                                        decoration: InputDecoration(labelText: 'Question'),
-                                        validator: (value) {
-                                          if (value == null || value.isEmpty) {
-                                            return 'Please enter a question';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                      TextFormField(
-                                        controller: _option1Controller,
-                                        decoration: InputDecoration(labelText: 'Option 1'),
-                                        validator: (value) {
-                                          if (value == null || value.isEmpty) {
-                                            return 'Please enter option 1';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                      TextFormField(
-                                        controller: _option2Controller,
-                                        decoration: InputDecoration(labelText: 'Option 2'),
-                                        validator: (value) {
-                                          if (value == null || value.isEmpty) {
-                                            return 'Please enter option 2';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                      TextFormField(
-                                        controller: _option3Controller,
-                                        decoration: InputDecoration(labelText: 'Option 3'),
-                                        validator: (value) {
-                                          if (value == null || value.isEmpty) {
-                                            return 'Please enter option 3';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                      TextFormField(
-                                        controller: _option4Controller,
-                                        decoration: InputDecoration(labelText: 'Option 4'),
-                                        validator: (value) {
-                                          if (value == null || value.isEmpty) {
-                                            return 'Please enter option 4';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                      TextFormField(
-                                        initialValue: _correctOptionIndex.toString(),
-                                        decoration: InputDecoration(labelText: 'Correct Option Index'),
-                                        keyboardType: TextInputType.number,
-                                        onChanged: (value) {
-                                          setState(() {
-                                            _correctOptionIndex = int.tryParse(value) ?? 0;
-                                          });
-                                        },
-                                        validator: (value) {
-                                          if (value == null || value.isEmpty) {
-                                            return 'Please enter the correct option index';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                    ],
+                      return Card(
+                        child: ListTile(
+                          title: Text(_translate('Quiz') + ' ${quiz.id}'),
+                          onTap: () {
+                            // Show dialog to update quiz
+                            _questionController.text = quiz['question'];
+                            _option1Controller.text = quiz['options'][0];
+                            _option2Controller.text = quiz['options'][1];
+                            _option3Controller.text = quiz['options'][2];
+                            _option4Controller.text = quiz['options'][3];
+                            _correctOptionIndex = quiz['correctOptionIndex'];
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: Text(_translate('Update Quiz')),
+                                  content: Form(
+                                    key: _formKey,
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        TextFormField(
+                                          controller: _questionController,
+                                          decoration: InputDecoration(labelText: _translate('Question')),
+                                          validator: (value) {
+                                            if (value == null || value.isEmpty) {
+                                              return _translate('Please enter a question');
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                        TextFormField(
+                                          controller: _option1Controller,
+                                          decoration: InputDecoration(labelText: _translate('Option 1')),
+                                          validator: (value) {
+                                            if (value == null || value.isEmpty) {
+                                              return _translate('Please enter option 1');
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                        TextFormField(
+                                          controller: _option2Controller,
+                                          decoration: InputDecoration(labelText: _translate('Option 2')),
+                                          validator: (value) {
+                                            if (value == null || value.isEmpty) {
+                                              return _translate('Please enter option 2');
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                        TextFormField(
+                                          controller: _option3Controller,
+                                          decoration: InputDecoration(labelText: _translate('Option 3')),
+                                          validator: (value) {
+                                            if (value == null || value.isEmpty) {
+                                              return _translate('Please enter option 3');
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                        TextFormField(
+                                          controller: _option4Controller,
+                                          decoration: InputDecoration(labelText: _translate('Option 4')),
+                                          validator: (value) {
+                                            if (value == null || value.isEmpty) {
+                                              return _translate('Please enter option 4');
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                        TextFormField(
+                                          initialValue: _correctOptionIndex.toString(),
+                                          decoration: InputDecoration(labelText: _translate('Correct Option Index')),
+                                          keyboardType: TextInputType.number,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              _correctOptionIndex = int.tryParse(value) ?? 0;
+                                            });
+                                          },
+                                          validator: (value) {
+                                            if (value == null || value.isEmpty) {
+                                              return _translate('Please enter the correct option index');
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                    child: Text('Cancel'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      _updateQuiz(quiz.id);
-                                      Navigator.of(context).pop();
-                                    },
-                                    child: Text('Update'),
-                                  ),
-                                ],
-                              );
-                            },
-                          );
-                        },
-                        trailing: IconButton(
-                          icon: Icon(Icons.delete),
-                          onPressed: () {
-                            _deleteQuiz(quiz.id);
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: Text(_translate('Cancel')),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        _updateQuiz(quiz.id);
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: Text(_translate('Update')),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
                           },
+                          trailing: IconButton(
+                            icon: Icon(Icons.delete),
+                            onPressed: () {
+                              _deleteQuiz(quiz.id);
+                            },
+                          ),
                         ),
                       );
                     },
@@ -327,7 +336,7 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
-                title: Text('Add Quiz'),
+                title: Text(_translate('Add Quiz')),
                 content: Form(
                   key: _formKey,
                   child: Column(
@@ -336,56 +345,56 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
                     children: [
                       TextFormField(
                         controller: _questionController,
-                        decoration: InputDecoration(labelText: 'Question'),
+                        decoration: InputDecoration(labelText: _translate('Question')),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter a question';
+                            return _translate('Please enter a question');
                           }
                           return null;
                         },
                       ),
                       TextFormField(
                         controller: _option1Controller,
-                        decoration: InputDecoration(labelText: 'Option 1'),
+                        decoration: InputDecoration(labelText: _translate('Option 1')),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter option 1';
+                            return _translate('Please enter option 1');
                           }
                           return null;
                         },
                       ),
                       TextFormField(
                         controller: _option2Controller,
-                        decoration: InputDecoration(labelText: 'Option 2'),
+                        decoration: InputDecoration(labelText: _translate('Option 2')),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter option 2';
+                            return _translate('Please enter option 2');
                           }
                           return null;
                         },
                       ),
                       TextFormField(
                         controller: _option3Controller,
-                        decoration: InputDecoration(labelText: 'Option 3'),
+                        decoration: InputDecoration(labelText: _translate('Option 3')),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter option 3';
+                            return _translate('Please enter option 3');
                           }
                           return null;
                         },
                       ),
                       TextFormField(
                         controller: _option4Controller,
-                        decoration: InputDecoration(labelText: 'Option 4'),
+                        decoration: InputDecoration(labelText: _translate('Option 4')),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter option 4';
+                            return _translate('Please enter option 4');
                           }
                           return null;
                         },
                       ),
                       TextFormField(
-                        decoration: InputDecoration(labelText: 'Correct Option Index'),
+                        decoration: InputDecoration(labelText: _translate('Correct Option Index')),
                         keyboardType: TextInputType.number,
                         onChanged: (value) {
                           setState(() {
@@ -394,7 +403,7 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
                         },
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter the correct option index';
+                            return _translate('Please enter the correct option index');
                           }
                           return null;
                         },
@@ -407,14 +416,14 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
-                    child: Text('Cancel'),
+                    child: Text(_translate('Cancel')),
                   ),
                   TextButton(
                     onPressed: () {
                       _addQuiz();
                       Navigator.of(context).pop();
                     },
-                    child: Text('Add'),
+                    child: Text(_translate('Add')),
                   ),
                 ],
               );

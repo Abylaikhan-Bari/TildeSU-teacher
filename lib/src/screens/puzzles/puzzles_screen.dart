@@ -33,10 +33,10 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
             key: _formKey,
             child: TextFormField(
               controller: _sentencePartsController,
-              decoration: InputDecoration(labelText: 'Sentence Parts (comma-separated)'),
+              decoration: InputDecoration(labelText: _translate('Sentence Parts (comma-separated)')),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter sentence parts';
+                  return _translate('Please enter sentence parts');
                 }
                 return null;
               },
@@ -45,7 +45,7 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('Cancel'),
+              child: Text(_translate('Cancel')),
             ),
             TextButton(
               onPressed: () async {
@@ -100,7 +100,7 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
                   Navigator.of(context).pop();
                 }
               },
-              child: Text(isUpdate ? 'Update' : 'Add'),
+              child: Text(isUpdate ? _translate('Update') : _translate('Add')),
             ),
           ],
         );
@@ -120,8 +120,8 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Delete Puzzle'),
-          content: Text('Are you sure you want to delete this puzzle?'),
+          title: Text(_translate('Delete Puzzle')),
+          content: Text(_translate('Are you sure you want to delete this puzzle?')),
           actions: <Widget>[
             TextButton(
               onPressed: () async {
@@ -136,17 +136,17 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
                 } catch (error) {
                   // Handle error
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to delete puzzle: $error')),
+                    SnackBar(content: Text(_translate('Failed to delete puzzle: $error'))),
                   );
                 }
               },
-              child: Text('Yes'),
+              child: Text(_translate('Yes')),
             ),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('No'),
+              child: Text(_translate('No')),
             ),
           ],
         );
@@ -158,7 +158,8 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Puzzles for Level $_selectedLevel'),
+        title: Text(_translate('Puzzles for Level $_selectedLevel')),
+        backgroundColor: Color(0xFF34559C),
       ),
       body: Column(
         children: [
@@ -196,15 +197,17 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
                     final puzzleId = puzzle.id;
                     final sentenceParts = (puzzle['sentenceParts'] as List).cast<String>();
                     // 'correctOrder' is now automatically managed, no need for manual input
-                    return ListTile(
-                      title: Text('Puzzle $puzzleId'),
-                      onTap: () {
-                        _sentencePartsController.text = sentenceParts.join(', ');
-                        _addOrUpdatePuzzle(puzzleId: puzzleId);
-                      },
-                      trailing: IconButton(
-                        icon: Icon(Icons.delete),
-                        onPressed: () => _deletePuzzle(puzzleId),
+                    return Card(
+                      child: ListTile(
+                        title: Text(_translate('Puzzle $puzzleId')),
+                        onTap: () {
+                          _sentencePartsController.text = sentenceParts.join(', ');
+                          _addOrUpdatePuzzle(puzzleId: puzzleId);
+                        },
+                        trailing: IconButton(
+                          icon: Icon(Icons.delete),
+                          onPressed: () => _deletePuzzle(puzzleId),
+                        ),
                       ),
                     );
                   },
@@ -222,5 +225,11 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
         child: Icon(Icons.add),
       ),
     );
+  }
+
+  String _translate(String text) {
+    // Here you can implement your translation logic
+    // For now, let's just return the input text
+    return text;
   }
 }
