@@ -159,7 +159,7 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_translate('Puzzles for Level $_selectedLevel')),
-        backgroundColor: Color(0xFF34559C),
+
       ),
       body: Column(
         children: [

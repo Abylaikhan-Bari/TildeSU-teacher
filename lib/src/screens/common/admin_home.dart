@@ -124,6 +124,7 @@ class _AdminHomeState extends State<AdminHome> {
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
+        backgroundColor: const Color(0xFF34559C),
       ),
     );
   }
