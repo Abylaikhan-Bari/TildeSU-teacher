@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:tildesu_teacher/src/screens/puzzles/puzzles_screen.dart';
 import 'package:tildesu_teacher/src/screens/quizzes/quizzes_screen.dart';
 import 'package:tildesu_teacher/src/screens/true_or_false/true_or_false_screen.dart';
-import 'package:tildesu_teacher/src/services/auth_service.dart'; // Import your authentication service
+import 'package:tildesu_teacher/src/services/auth_service.dart';
+
+import '../dictionary_cards/dictionary_cards_screen.dart';
+import '../image_quiz/image_quiz_screen.dart'; // Import your authentication service
 
 class AdminHome extends StatefulWidget {
   @override
@@ -21,6 +24,10 @@ class _AdminHomeState extends State<AdminHome> {
         return PuzzlesScreen();
       case 2:
         return TrueOrFalseScreen();
+      case 3:
+        return DictionaryCardsScreen();
+      case 4:
+        return ImageQuizzesScreen();
       default:
         return QuizzesScreen(); // Default case
     }
@@ -38,7 +45,7 @@ class _AdminHomeState extends State<AdminHome> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Confirm Sign Out'),
-          content: SingleChildScrollView(
+          content: const SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
                 Text('Are you sure you want to sign out?'),
@@ -76,20 +83,19 @@ class _AdminHomeState extends State<AdminHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'TildeSU Admin',
-          style: TextStyle(color: Colors.white), // Set text color to white
+          style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: Color(0xFF34559C), // Set the app bar color to #34559C
+        backgroundColor: const Color(0xFF34559C),
         actions: [
           IconButton(
-            icon: Icon(Icons.exit_to_app),
-            onPressed: () => _confirmSignOut(context), // Call _confirmSignOut method on button press
+            icon: const Icon(Icons.exit_to_app, color: Colors.white), // Set icon color to white for visibility
+            onPressed: () => _confirmSignOut(context),
           ),
         ],
       ),
       body: Center(
-        // Dynamically get the current screen based on _selectedIndex
         child: _getScreen(_selectedIndex),
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -106,9 +112,21 @@ class _AdminHomeState extends State<AdminHome> {
             icon: Icon(Icons.check_circle_outline),
             label: 'True/False',
           ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.abc),
+            label: 'Dictionary',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.add_chart_sharp),
+            label: 'Image Quiz',
+          ),
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
+        backgroundColor: const Color(0xFF34559C), // Set the background color
+        selectedItemColor: Colors.white, // Set the selected item color to white for visibility
+        unselectedItemColor: Colors.white60, // Set a lighter color for unselected items for visibility
+        type: BottomNavigationBarType.fixed, // Fixed type to maintain the color
       ),
     );
   }

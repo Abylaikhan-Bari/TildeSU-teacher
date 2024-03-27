@@ -9,113 +9,53 @@ class QuizzesScreen extends StatefulWidget {
 class _QuizzesScreenState extends State<QuizzesScreen> {
   final _formKey = GlobalKey<FormState>();
   final _questionController = TextEditingController();
-  final _option1Controller = TextEditingController();
-  final _option2Controller = TextEditingController();
-  final _option3Controller = TextEditingController();
-  final _option4Controller = TextEditingController();
-  int _correctOptionIndex = 0; // Index of the correct option
-  String _selectedLevel = 'A1'; // Default selected level
+  List<TextEditingController> _optionControllers = List.generate(4, (index) => TextEditingController());
+  int _correctOptionIndex = 0;
+  String _selectedLevel = 'A1';
+
+  @override
+  void initState() {
+    super.initState();
+    _optionControllers = List.generate(4, (index) => TextEditingController());
+  }
 
   @override
   void dispose() {
     _questionController.dispose();
-    _option1Controller.dispose();
-    _option2Controller.dispose();
-    _option3Controller.dispose();
-    _option4Controller.dispose();
+    _optionControllers.forEach((controller) => controller.dispose());
     super.dispose();
   }
 
-  Future<void> _addQuiz() async {
+  Future<void> _addOrUpdateQuiz({String? quizId}) async {
     if (_formKey.currentState!.validate()) {
       final quizData = {
         'question': _questionController.text.trim(),
-        'options': [
-          _option1Controller.text.trim(),
-          _option2Controller.text.trim(),
-          _option3Controller.text.trim(),
-          _option4Controller.text.trim(),
-        ],
-        'correctOptionIndex': _correctOptionIndex, // This is already an int
+        'options': _optionControllers.map((controller) => controller.text.trim()).toList(),
+        'correctOptionIndex': _correctOptionIndex,
       };
 
-      // Retrieve all quiz document IDs to find the highest number
-      final querySnapshot = await FirebaseFirestore.instance
+      final collectionReference = FirebaseFirestore.instance
           .collection('levels')
           .doc(_selectedLevel)
-          .collection('quizzes')
-          .get();
+          .collection('quizzes');
 
-      final List<DocumentSnapshot> documents = querySnapshot.docs;
-      // Find the last quiz ID
-      int highestId = documents.fold<int>(0, (previousValue, document) {
-        final idString = document.id.replaceAll(RegExp(r'[^0-9]'), '');
-        final id = int.tryParse(idString) ?? 0;
-        return id > previousValue ? id : previousValue;
-      });
-
-      // Generate the next quiz ID
-      final nextQuizId = 'quizId${highestId + 1}';
-
-      try {
-        await FirebaseFirestore.instance
-            .collection('levels')
-            .doc(_selectedLevel)
-            .collection('quizzes')
-            .doc(nextQuizId) // Use the next available ID
-            .set(quizData);
-
-        _clearForm();
-      } catch (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add quiz: $error')),
-        );
+      if (quizId == null) {
+        await collectionReference.add(quizData);
+      } else {
+        await collectionReference.doc(quizId).update(quizData);
       }
+
+      _clearForm();
     }
   }
 
-
   void _clearForm() {
     _questionController.clear();
-    _option1Controller.clear();
-    _option2Controller.clear();
-    _option3Controller.clear();
-    _option4Controller.clear();
+    _optionControllers.forEach((controller) => controller.clear());
     setState(() {
       _correctOptionIndex = 0;
     });
   }
-
-  Future<void> _updateQuiz(String quizId) async {
-    if (_formKey.currentState!.validate()) {
-      final quizData = {
-        'question': _questionController.text.trim(),
-        'options': [
-          _option1Controller.text.trim(),
-          _option2Controller.text.trim(),
-          _option3Controller.text.trim(),
-          _option4Controller.text.trim(),
-        ],
-        'correctOptionIndex': _correctOptionIndex, // Make sure this is set as an int
-      };
-
-      try {
-        await FirebaseFirestore.instance
-            .collection('levels')
-            .doc(_selectedLevel)
-            .collection('quizzes')
-            .doc(quizId) // Use the existing quiz ID
-            .update(quizData);
-
-        _clearForm();
-      } catch (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update quiz: $error')),
-        );
-      }
-    }
-  }
-
 
   Future<void> _deleteQuiz(String quizId) async {
     await showDialog(
@@ -142,13 +82,12 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
                       .delete();
                   Navigator.of(context).pop();
                 } catch (error) {
-                  // Handle error
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Failed to delete quiz: $error')),
                   );
                 }
               },
-              child: Text('Yes'),
+              child: Text('Delete'),
             ),
           ],
         );
@@ -157,9 +96,71 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
   }
 
   String _translate(String key) {
-    // Here you would implement logic to translate the key to the appropriate language
-    // For now, let's return the key as is
+    // Add your translation logic here
     return key;
+  }
+
+  Widget _buildQuizForm({bool isUpdating = false, String? quizId}) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextFormField(
+            controller: _questionController,
+            decoration: InputDecoration(labelText: 'Question'),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter a question';
+              }
+              return null;
+            },
+          ),
+          ...List.generate(4, (index) {
+            return TextFormField(
+              controller: _optionControllers[index],
+              decoration: InputDecoration(labelText: 'Option ${index + 1}'),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter option ${index + 1}';
+                }
+                return null;
+              },
+            );
+          }),
+          DropdownButtonFormField<int>(
+            value: _correctOptionIndex,
+            onChanged: (newValue) {
+              if (newValue != null) {
+                setState(() {
+                  _correctOptionIndex = newValue;
+                });
+              }
+            },
+            items: List.generate(4, (index) {
+              return DropdownMenuItem<int>(
+                value: index,
+                child: Text('Option ${index + 1}'),
+              );
+            }),
+            decoration: InputDecoration(labelText: 'Correct Option Index'),
+            validator: (value) {
+              if (value == null) {
+                return 'Please select the correct option index';
+              }
+              return null;
+            },
+          ),
+          ElevatedButton(
+            onPressed: () {
+              _addOrUpdateQuiz(quizId: isUpdating ? quizId : null);
+              Navigator.of(context).pop(); // Dismiss the dialog
+            },
+            child: Text(isUpdating ? 'Update' : 'Add'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -167,7 +168,6 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_translate('Quizzes for Level') + ' $_selectedLevel'),
-        backgroundColor: Color(0xFF34559C), // Set the app bar color to #34559C
       ),
       body: Column(
         children: [
@@ -180,7 +180,7 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
                 });
               }
             },
-            items: <String>['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] // Add more levels if needed
+            items: <String>['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
                 .map<DropdownMenuItem<String>>((String value) {
               return DropdownMenuItem<String>(
                 value: value,
@@ -197,136 +197,42 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(
-                    child: CircularProgressIndicator(),
-                  );
-                } else {
-                  final quizzes = snapshot.data!.docs;
-                  return ListView.builder(
-                    itemCount: quizzes.length,
-                    itemBuilder: (context, index) {
-                      final quiz = quizzes[index];
-                      return Card(
-                        child: ListTile(
-                          title: Text(_translate('Quiz') + ' ${quiz.id}'),
-                          onTap: () {
-                            // Show dialog to update quiz
-                            _questionController.text = quiz['question'];
-                            _option1Controller.text = quiz['options'][0];
-                            _option2Controller.text = quiz['options'][1];
-                            _option3Controller.text = quiz['options'][2];
-                            _option4Controller.text = quiz['options'][3];
-                            _correctOptionIndex = quiz['correctOptionIndex'];
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  title: Text(_translate('Update Quiz')),
-                                  content: Form(
-                                    key: _formKey,
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        TextFormField(
-                                          controller: _questionController,
-                                          decoration: InputDecoration(labelText: _translate('Question')),
-                                          validator: (value) {
-                                            if (value == null || value.isEmpty) {
-                                              return _translate('Please enter a question');
-                                            }
-                                            return null;
-                                          },
-                                        ),
-                                        TextFormField(
-                                          controller: _option1Controller,
-                                          decoration: InputDecoration(labelText: _translate('Option 1')),
-                                          validator: (value) {
-                                            if (value == null || value.isEmpty) {
-                                              return _translate('Please enter option 1');
-                                            }
-                                            return null;
-                                          },
-                                        ),
-                                        TextFormField(
-                                          controller: _option2Controller,
-                                          decoration: InputDecoration(labelText: _translate('Option 2')),
-                                          validator: (value) {
-                                            if (value == null || value.isEmpty) {
-                                              return _translate('Please enter option 2');
-                                            }
-                                            return null;
-                                          },
-                                        ),
-                                        TextFormField(
-                                          controller: _option3Controller,
-                                          decoration: InputDecoration(labelText: _translate('Option 3')),
-                                          validator: (value) {
-                                            if (value == null || value.isEmpty) {
-                                              return _translate('Please enter option 3');
-                                            }
-                                            return null;
-                                          },
-                                        ),
-                                        TextFormField(
-                                          controller: _option4Controller,
-                                          decoration: InputDecoration(labelText: _translate('Option 4')),
-                                          validator: (value) {
-                                            if (value == null || value.isEmpty) {
-                                              return _translate('Please enter option 4');
-                                            }
-                                            return null;
-                                          },
-                                        ),
-                                        TextFormField(
-                                          initialValue: _correctOptionIndex.toString(),
-                                          decoration: InputDecoration(labelText: _translate('Correct Option Index')),
-                                          keyboardType: TextInputType.number,
-                                          onChanged: (value) {
-                                            setState(() {
-                                              _correctOptionIndex = int.tryParse(value) ?? 0;
-                                            });
-                                          },
-                                          validator: (value) {
-                                            if (value == null || value.isEmpty) {
-                                              return _translate('Please enter the correct option index');
-                                            }
-                                            return null;
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.of(context).pop();
-                                      },
-                                      child: Text(_translate('Cancel')),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        _updateQuiz(quiz.id);
-                                        Navigator.of(context).pop();
-                                      },
-                                      child: Text(_translate('Update')),
-                                    ),
-                                  ],
-                                );
-                              },
+                  return Center(child: CircularProgressIndicator());
+                }
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return Center(child: Text('No quizzes found'));
+                }
+                return ListView.builder(
+                  itemCount: snapshot.data!.docs.length,
+                  itemBuilder: (context, index) {
+                    final quiz = snapshot.data!.docs[index];
+                    final quizData = quiz.data() as Map<String, dynamic>;
+                    return ListTile(
+                      title: Text(quizData['question']),
+                      subtitle: Text('Correct Answer: Option ${quizData['correctOptionIndex'] + 1}'),
+                      onTap: () {
+                        _questionController.text = quizData['question'];
+                        _optionControllers.asMap().forEach((index, controller) {
+                          controller.text = quizData['options'][index];
+                        });
+                        _correctOptionIndex = quizData['correctOptionIndex'];
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: Text('Update Quiz'),
+                              content: _buildQuizForm(isUpdating: true, quizId: quiz.id),
                             );
                           },
-                          trailing: IconButton(
-                            icon: Icon(Icons.delete),
-                            onPressed: () {
-                              _deleteQuiz(quiz.id);
-                            },
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                }
+                        );
+                      },
+                      trailing: IconButton(
+                        icon: Icon(Icons.delete),
+                        onPressed: () => _deleteQuiz(quiz.id),
+                      ),
+                    );
+                  },
+                );
               },
             ),
           ),
@@ -334,105 +240,19 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
+          _clearForm();
           showDialog(
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
-                title: Text(_translate('Add Quiz')),
-                content: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TextFormField(
-                        controller: _questionController,
-                        decoration: InputDecoration(labelText: _translate('Question')),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return _translate('Please enter a question');
-                          }
-                          return null;
-                        },
-                      ),
-                      TextFormField(
-                        controller: _option1Controller,
-                        decoration: InputDecoration(labelText: _translate('Option 1')),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return _translate('Please enter option 1');
-                          }
-                          return null;
-                        },
-                      ),
-                      TextFormField(
-                        controller: _option2Controller,
-                        decoration: InputDecoration(labelText: _translate('Option 2')),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return _translate('Please enter option 2');
-                          }
-                          return null;
-                        },
-                      ),
-                      TextFormField(
-                        controller: _option3Controller,
-                        decoration: InputDecoration(labelText: _translate('Option 3')),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return _translate('Please enter option 3');
-                          }
-                          return null;
-                        },
-                      ),
-                      TextFormField(
-                        controller: _option4Controller,
-                        decoration: InputDecoration(labelText: _translate('Option 4')),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return _translate('Please enter option 4');
-                          }
-                          return null;
-                        },
-                      ),
-                      TextFormField(
-                        decoration: InputDecoration(labelText: _translate('Correct Option Index')),
-                        keyboardType: TextInputType.number,
-                        onChanged: (value) {
-                          setState(() {
-                            _correctOptionIndex = int.tryParse(value) ?? 0;
-                          });
-                        },
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return _translate('Please enter the correct option index');
-                          }
-                          return null;
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: Text(_translate('Cancel')),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      _addQuiz();
-                      Navigator.of(context).pop();
-                    },
-                    child: Text(_translate('Add')),
-                  ),
-                ],
+                title: Text('Add Quiz'),
+                content: _buildQuizForm(isUpdating: false),
               );
             },
           );
         },
         child: Icon(Icons.add),
+        backgroundColor: const Color(0xFF34559C),
       ),
     );
   }

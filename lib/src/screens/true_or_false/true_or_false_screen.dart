@@ -136,7 +136,7 @@ class _TrueOrFalseScreenState extends State<TrueOrFalseScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_translate('True/False Exercises for Level $_selectedLevel')),
-        backgroundColor: Color(0xFF34559C),
+
       ),
       body: Column(
         children: [
@@ -314,6 +314,7 @@ class _TrueOrFalseScreenState extends State<TrueOrFalseScreen> {
           );
         },
         child: Icon(Icons.add),
+          backgroundColor: const Color(0xFF34559C),
       ),
     );
   }
