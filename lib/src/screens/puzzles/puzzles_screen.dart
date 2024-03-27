@@ -223,6 +223,7 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
           _addOrUpdatePuzzle();
         },
         child: Icon(Icons.add),
+          backgroundColor: const Color(0xFF34559C),
       ),
     );
   }

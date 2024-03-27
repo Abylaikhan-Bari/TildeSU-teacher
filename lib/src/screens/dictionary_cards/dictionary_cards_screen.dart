@@ -220,6 +220,7 @@ class _DictionaryCardsScreenState extends State<DictionaryCardsScreen> {
           );
         },
         child: Icon(Icons.add),
+          backgroundColor: const Color(0xFF34559C),
       ),
     );
   }

@@ -279,6 +279,7 @@ class _ImageQuizzesScreenState extends State<ImageQuizzesScreen> {
           );
         },
         child: Icon(Icons.add),
+          backgroundColor: const Color(0xFF34559C),
       ),
     );
   }

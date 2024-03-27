@@ -85,18 +85,17 @@ class _AdminHomeState extends State<AdminHome> {
       appBar: AppBar(
         title: const Text(
           'TildeSU Admin',
-          style: TextStyle(color: Colors.white), // Set text color to white
+          style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: const Color(0xFF34559C), // Set the app bar color to #34559C
+        backgroundColor: const Color(0xFF34559C),
         actions: [
           IconButton(
-            icon: Icon(Icons.exit_to_app),
-            onPressed: () => _confirmSignOut(context), // Call _confirmSignOut method on button press
+            icon: const Icon(Icons.exit_to_app, color: Colors.white), // Set icon color to white for visibility
+            onPressed: () => _confirmSignOut(context),
           ),
         ],
       ),
       body: Center(
-        // Dynamically get the current screen based on _selectedIndex
         child: _getScreen(_selectedIndex),
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -124,7 +123,10 @@ class _AdminHomeState extends State<AdminHome> {
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        backgroundColor: const Color(0xFF34559C),
+        backgroundColor: const Color(0xFF34559C), // Set the background color
+        selectedItemColor: Colors.white, // Set the selected item color to white for visibility
+        unselectedItemColor: Colors.white60, // Set a lighter color for unselected items for visibility
+        type: BottomNavigationBarType.fixed, // Fixed type to maintain the color
       ),
     );
   }

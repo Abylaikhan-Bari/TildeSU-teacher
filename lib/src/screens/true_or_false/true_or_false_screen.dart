@@ -314,6 +314,7 @@ class _TrueOrFalseScreenState extends State<TrueOrFalseScreen> {
           );
         },
         child: Icon(Icons.add),
+          backgroundColor: const Color(0xFF34559C),
       ),
     );
   }
