@@ -58,12 +58,44 @@ class _ImageQuizzesScreenState extends State<ImageQuizzesScreen> {
   }
 
   Future<void> _deleteImageQuiz(String quizId) async {
-    await FirebaseFirestore.instance
-        .collection('levels')
-        .doc(_selectedLevel)
-        .collection('imageQuizzes')
-        .doc(quizId)
-        .delete();
+    // Show confirmation dialog before deleting
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete Quiz'),
+          content: Text('Are you sure you want to delete this image quiz?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete ?? false) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('levels')
+            .doc(_selectedLevel)
+            .collection('imageQuizzes')
+            .doc(quizId)
+            .delete();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Image quiz deleted successfully')),
+        );
+      } catch (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete image quiz: $error')),
+        );
+      }
+    }
   }
 
   String _translate(String key) {
