@@ -70,7 +70,7 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
     final isSignInForm = _authFormType == AuthFormType.signIn;
     return Scaffold(
       appBar: AppBar(
-        title: Text(isSignInForm ? 'Sign In' : 'Sign Up'),
+        title: Text(isSignInForm ? 'Sign In' : 'Sign Up', style: const TextStyle(color: Colors.white)),
         backgroundColor: Color(0xFF34559C), // Add a consistent color theme
       ),
       body: SingleChildScrollView(
