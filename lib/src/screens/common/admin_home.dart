@@ -87,7 +87,7 @@ class _AdminHomeState extends State<AdminHome> {
           'TildeSU Admin',
           style: TextStyle(color: Colors.white), // Set text color to white
         ),
-        backgroundColor: Color(0xFF34559C), // Set the app bar color to #34559C
+        backgroundColor: const Color(0xFF34559C), // Set the app bar color to #34559C
         actions: [
           IconButton(
             icon: Icon(Icons.exit_to_app),
