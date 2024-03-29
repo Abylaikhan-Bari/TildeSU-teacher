@@ -69,50 +69,71 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
   Widget build(BuildContext context) {
     final isSignInForm = _authFormType == AuthFormType.signIn;
     return Scaffold(
-      appBar: AppBar(title: Text(isSignInForm ? 'Sign In' : 'Sign Up')),
-      body: Padding(
+      appBar: AppBar(
+        title: Text(isSignInForm ? 'Sign In' : 'Sign Up', style: const TextStyle(color: Colors.white)),
+        backgroundColor: Color(0xFF34559C), // Add a consistent color theme
+      ),
+      body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
         child: Form(
-          key: _formKey, // Use the form key
+          key: _formKey,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Card(
-                elevation: 4,
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: TextFormField(
-                    controller: _emailController,
-                    decoration: InputDecoration(labelText: 'Email'),
-                    validator: (value) => (value == null || value.isEmpty) ? 'Please enter your email' : null,
-                  ),
-                ),
-              ),
-              Card(
-                elevation: 4,
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: TextFormField(
-                    controller: _passwordController,
-                    decoration: InputDecoration(labelText: 'Password'),
-                    obscureText: true,
-                    validator: (value) => (value == null || value.isEmpty) ? 'Please enter your password' : null,
-                  ),
-                ),
+              SizedBox(height: MediaQuery.of(context).size.height * 0.1), // Add some spacing
+              Text(
+                isSignInForm ? 'Welcome Back!' : 'Create Account',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 24),
-              if (_errorMessage.isNotEmpty) // Display error message if not empty
+              TextFormField(
+                controller: _emailController,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Email',
+                  prefixIcon: Icon(Icons.email),
+                ),
+                validator: (value) => (value == null || value.isEmpty) ? 'Please enter your email' : null,
+              ),
+              SizedBox(height: 16),
+              TextFormField(
+                controller: _passwordController,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Password',
+                  prefixIcon: Icon(Icons.lock),
+                ),
+                obscureText: true,
+                validator: (value) => (value == null || value.isEmpty) ? 'Please enter your password' : null,
+              ),
+              SizedBox(height: 24),
+              if (_errorMessage.isNotEmpty)
                 Text(_errorMessage, style: TextStyle(color: Colors.red, fontSize: 14)),
-              Card(
-                elevation: 4,
-                child: ElevatedButton(
-                  onPressed: _auth,
-                  child: Text(isSignInForm ? 'Sign In' : 'Sign Up'),
+              SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _auth,
+                child: Text(
+                  isSignInForm ? 'Sign In' : 'Sign Up',
+                  style: TextStyle(color: Colors.white), // Ensuring text color is white
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF34559C),
+                  minimumSize: Size(double.infinity, 50), // Full width and fixed height
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
                 ),
               ),
+              SizedBox(height: 12),
               TextButton(
-                  onPressed: _toggleFormType,
-                  child: Text(isSignInForm ? 'Need an account? Sign up' : 'Have an account? Sign in')
+                onPressed: _toggleFormType,
+                child: Text(
+                  isSignInForm ? 'Need an account? Sign up' : 'Have an account? Sign in',
+                  style: TextStyle(
+                    color: Color(0xFF34559C),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ],
           ),

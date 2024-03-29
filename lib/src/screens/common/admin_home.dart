@@ -4,6 +4,7 @@ import 'package:tildesu_teacher/src/screens/quizzes/quizzes_screen.dart';
 import 'package:tildesu_teacher/src/screens/true_or_false/true_or_false_screen.dart';
 import 'package:tildesu_teacher/src/services/auth_service.dart';
 
+import '../authentication/authentication_screen.dart';
 import '../dictionary_cards/dictionary_cards_screen.dart';
 import '../image_quiz/image_quiz_screen.dart'; // Import your authentication service
 
@@ -72,12 +73,16 @@ class _AdminHomeState extends State<AdminHome> {
     );
   }
 
-  void _signOut(BuildContext context) {
-    // Call your sign-out method from the authentication service
-    AuthService().signOut();
-    // Navigate back to the authentication screen or any other screen
-    Navigator.of(context).pop();
+  void _signOut(BuildContext context) async {
+    await AuthService().signOut(); // Sign out from Firebase Auth
+
+    // Navigate back to the authentication screen
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => AuthenticationScreen()),
+          (Route<dynamic> route) => false,
+    );
   }
+
 
   @override
   Widget build(BuildContext context) {
