@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tildesu_teacher/src/screens/lessons/lessons_screen.dart';
 import 'package:tildesu_teacher/src/screens/puzzles/puzzles_screen.dart';
 import 'package:tildesu_teacher/src/screens/quizzes/quizzes_screen.dart';
 import 'package:tildesu_teacher/src/screens/true_or_false/true_or_false_screen.dart';
@@ -99,6 +100,39 @@ class _AdminHomeState extends State<AdminHome> {
             onPressed: () => _confirmSignOut(context),
           ),
         ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            DrawerHeader(
+              child: Text('Admin Menu', style: TextStyle(color: Colors.white)),
+              decoration: BoxDecoration(
+                color: Color(0xFF34559C),
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.home),
+              title: Text('Home'),
+              onTap: () {
+                // Update the state of the app
+                // ...
+                // Then close the drawer
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.book),
+              title: Text('Lessons'),
+              onTap: () {
+                // Navigate to LessonsScreen
+                Navigator.pop(context); // Close the drawer
+                Navigator.push(context, MaterialPageRoute(builder: (context) => LessonsScreen())); // Replace with actual navigation if using named routes
+              },
+            ),
+            // ... Add other ListTile widgets for different screens as needed
+          ],
+        ),
       ),
       body: Center(
         child: _getScreen(_selectedIndex),
