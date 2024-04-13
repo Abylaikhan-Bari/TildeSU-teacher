@@ -18,6 +18,8 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
   final AuthService _authService = AuthService();
   AuthFormType _authFormType = AuthFormType.signIn;
   String _errorMessage = '';
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   @override
   void dispose() {
@@ -29,30 +31,21 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
 
   Future<void> _auth() async {
     if (_formKey.currentState!.validate()) {
-      // If it's a signUp form, check if the passwords match
-      if (_authFormType == AuthFormType.signUp &&
-          _passwordController.text != _confirmPasswordController.text) {
-        setState(() {
-          _errorMessage = "Passwords do not match";
-        });
-        return;
-      }
-
       try {
-        UserCredential userCredential;
+        User? user;
         if (_authFormType == AuthFormType.signIn) {
-          userCredential = (await _authService.signIn(
+          user = await _authService.signIn(
             _emailController.text.trim(),
             _passwordController.text.trim(),
-          )) as UserCredential;
+          );
         } else {
-          userCredential = (await _authService.signUp(
+          user = await _authService.signUp(
             _emailController.text.trim(),
             _passwordController.text.trim(),
-          )) as UserCredential;
+          );
         }
-        // Navigate to AdminHome if a user is successfully signed in or signed up
-        if (userCredential.user != null) {
+        // Check if the sign in / sign up was successful by checking if user is not null
+        if (user != null) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => AdminHome()),
           );
@@ -81,6 +74,18 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
     });
   }
 
+  void _togglePasswordVisibility() {
+    setState(() {
+      _obscurePassword = !_obscurePassword;
+    });
+  }
+
+  void _toggleConfirmPasswordVisibility() {
+    setState(() {
+      _obscureConfirmPassword = !_obscureConfirmPassword;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final isSignInForm = _authFormType == AuthFormType.signIn;
@@ -97,9 +102,11 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SizedBox(height: 40),
+              // Make sure the image path is correct.
               Image.asset('assets/logo.png', height: 100, errorBuilder: (context, error, stackTrace) {
                 return Icon(Icons.error); // Fallback to an icon if the image fails to load
-              }), SizedBox(height: 40),
+              }),
+              SizedBox(height: 40),
               TextFormField(
                 controller: _emailController,
                 decoration: InputDecoration(
@@ -119,8 +126,12 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
                 decoration: InputDecoration(
                   labelText: 'Password',
                   border: OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+                    onPressed: _togglePasswordVisibility,
+                  ),
                 ),
-                obscureText: true,
+                obscureText: _obscurePassword,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your password';
@@ -128,7 +139,6 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
                   return null;
                 },
               ),
-              // Confirm Password field for SignUp form
               if (_authFormType == AuthFormType.signUp)
                 Column(
                   children: [
@@ -138,8 +148,12 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
                       decoration: InputDecoration(
                         labelText: 'Confirm Password',
                         border: OutlineInputBorder(),
+                        suffixIcon: IconButton(
+                          icon: Icon(_obscureConfirmPassword ? Icons.visibility_off : Icons.visibility),
+                          onPressed: _toggleConfirmPasswordVisibility,
+                        ),
                       ),
-                      obscureText: true,
+                      obscureText: _obscureConfirmPassword,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please confirm your password';
@@ -157,7 +171,7 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
                 onPressed: _auth,
                 child: Text(isSignInForm ? 'Login' : 'Register'),
                 style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white, backgroundColor: Color(0xFF34559C), minimumSize: Size(double.infinity, 50), // text color
+                  foregroundColor: Colors.white, backgroundColor: Color(0xFF34559C), minimumSize: Size(double.infinity, 50),
                 ),
               ),
               TextButton(
