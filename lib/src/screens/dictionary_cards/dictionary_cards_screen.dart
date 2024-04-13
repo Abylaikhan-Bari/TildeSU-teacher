@@ -29,23 +29,19 @@ class _DictionaryCardsScreenState extends State<DictionaryCardsScreen> {
         'wordRussian': _russianWordController.text.trim(),
       };
 
-      final collectionReference = FirebaseFirestore.instance
+      CollectionReference collection = FirebaseFirestore.instance
           .collection('levels')
           .doc(_selectedLevel)
           .collection('dictionaryCards');
 
       if (cardId == null) {
-        // Adding a new card
-        await collectionReference.add(cardData);
+        await collection.add(cardData);
       } else {
-        // Updating an existing card
-        await collectionReference.doc(cardId).update(cardData);
+        await collection.doc(cardId).update(cardData);
       }
 
       _clearForm();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Dictionary card ${cardId == null ? "added" : "updated"} successfully')),
-      );
+      Navigator.of(context).pop(); // Close the dialog
     }
   }
 
@@ -56,7 +52,7 @@ class _DictionaryCardsScreenState extends State<DictionaryCardsScreen> {
   }
 
   Future<void> _deleteDictionaryCard(String cardId) async {
-    final shouldDelete = await showDialog<bool>(
+    final bool confirmDelete = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
@@ -74,19 +70,15 @@ class _DictionaryCardsScreenState extends State<DictionaryCardsScreen> {
           ],
         );
       },
-    );
+    ) ?? false;
 
-    if (shouldDelete == true) {
+    if (confirmDelete) {
       await FirebaseFirestore.instance
           .collection('levels')
           .doc(_selectedLevel)
           .collection('dictionaryCards')
           .doc(cardId)
           .delete();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Dictionary card deleted successfully')),
-      );
     }
   }
 
@@ -99,35 +91,20 @@ class _DictionaryCardsScreenState extends State<DictionaryCardsScreen> {
           TextFormField(
             controller: _englishWordController,
             decoration: InputDecoration(labelText: 'English Word'),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter the English word';
-              }
-              return null;
-            },
+            validator: (value) => value!.isEmpty ? 'Please enter the English word' : null,
           ),
           TextFormField(
             controller: _kazakhWordController,
             decoration: InputDecoration(labelText: 'Kazakh Word'),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter the Kazakh word';
-              }
-              return null;
-            },
+            validator: (value) => value!.isEmpty ? 'Please enter the Kazakh word' : null,
           ),
           TextFormField(
             controller: _russianWordController,
             decoration: InputDecoration(labelText: 'Russian Word'),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter the Russian word';
-              }
-              return null;
-            },
+            validator: (value) => value!.isEmpty ? 'Please enter the Russian word' : null,
           ),
-          TextButton(
-            onPressed: () => _addOrUpdateDictionaryCard(cardId: isUpdating ? cardId : null),
+          ElevatedButton(
+            onPressed: () => _addOrUpdateDictionaryCard(cardId: cardId),
             child: Text(isUpdating ? 'Update' : 'Add'),
           ),
         ],
@@ -138,77 +115,81 @@ class _DictionaryCardsScreenState extends State<DictionaryCardsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
+      appBar: AppBar(
         title: Text('Dictionary Cards for Level $_selectedLevel'),
-    ),
-    body: Column(
-    children: [
-    DropdownButton<String>(
-    value: _selectedLevel,
-    onChanged: (String? newValue) {
-    if (newValue != null) {
-    setState(() {
-    _selectedLevel = newValue;
-    });
-    }
-    },
-    items: <String>['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
-        .map<DropdownMenuItem<String>>((String value) {
-      return DropdownMenuItem<String>(
-        value: value,
-        child: Text(value),
-      );
-    }).toList(),
-    ),
-      Expanded(
-        child: StreamBuilder<QuerySnapshot>(
-          stream: FirebaseFirestore.instance
-              .collection('levels')
-              .doc(_selectedLevel)
-              .collection('dictionaryCards')
-              .snapshots(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
-            }
-            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-              return Center(child: Text('No dictionary cards found'));
-            }
-            return ListView(
-              children: snapshot.data!.docs.map((DocumentSnapshot document) {
-                Map<String, dynamic> card = document.data() as Map<String, dynamic>;
-                return ListTile(
-                  title: Text(card['wordEnglish'] ?? ''),
-                  subtitle: Text('Kazakh: ${card['wordKazakh']} | Russian: ${card['wordRussian']}'),
-                  onTap: () {
-                    _englishWordController.text = card['wordEnglish'];
-                    _kazakhWordController.text = card['wordKazakh'];
-                    _russianWordController.text = card['wordRussian'];
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: Text('Update Dictionary Card'),
-                          content: _buildForm(isUpdating: true, cardId: document.id),
-                        );
-                      },
-                    );
-                  },
-                  trailing: IconButton(
-                    icon: Icon(Icons.delete),
-                    onPressed: () => _deleteDictionaryCard(document.id),
-                  ),
-                );
-              }).toList(),
-            );
-          },
-        ),
       ),
-    ],
-    ),
+      body: Column(
+        children: [
+          DropdownButton<String>(
+            value: _selectedLevel,
+            onChanged: (String? newValue) {
+              if (newValue != null) {
+                setState(() {
+                  _selectedLevel = newValue;
+                });
+              }
+            },
+            items: <String>['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+                .map<DropdownMenuItem<String>>((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(value),
+              );
+            }).toList(),
+          ),
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('levels')
+                  .doc(_selectedLevel)
+                  .collection('dictionaryCards')
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                }
+
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return Center(child: Text('No dictionary cards found'));
+                }
+
+                return ListView(
+                  children: snapshot.data!.docs.map((DocumentSnapshot document) {
+                    Map<String, dynamic> card = document.data() as Map<String, dynamic>;
+                    return Card(
+                      margin: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                      child: ListTile(
+                        title: Text(card['wordKazakh'] ?? ''),
+                        subtitle: Text('English: ${card['wordEnglish']} | Russian: ${card['wordRussian']}'),
+                        onTap: () {
+                          _englishWordController.text = card['wordEnglish'];
+                          _kazakhWordController.text = card['wordKazakh'];
+                          _russianWordController.text = card['wordRussian'];
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: const Text('Update Dictionary Card'),
+                                content: _buildForm(isUpdating: true, cardId: document.id),
+                              );
+                            },
+                          );
+                        },
+                        trailing: IconButton(
+                          icon: Icon(Icons.delete),
+                          onPressed: () => _deleteDictionaryCard(document.id),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          _clearForm();
           showDialog(
             context: context,
             builder: (BuildContext context) {
@@ -220,9 +201,8 @@ class _DictionaryCardsScreenState extends State<DictionaryCardsScreen> {
           );
         },
         child: Icon(Icons.add),
-          backgroundColor: const Color(0xFF34559C),
+        backgroundColor: const Color(0xFF34559C),
       ),
     );
   }
 }
-

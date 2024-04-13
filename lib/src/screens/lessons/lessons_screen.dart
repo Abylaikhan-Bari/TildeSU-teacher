@@ -180,6 +180,7 @@ class _LessonsScreenState extends State<LessonsScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddEditLessonDialog(),
         child: Icon(Icons.add),
+        backgroundColor: const Color(0xFF34559C),
       ),
     );
   }

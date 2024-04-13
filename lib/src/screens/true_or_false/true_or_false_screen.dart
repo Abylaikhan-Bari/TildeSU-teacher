@@ -18,45 +18,25 @@ class _TrueOrFalseScreenState extends State<TrueOrFalseScreen> {
     super.dispose();
   }
 
-  void _addTrueOrFalseExercise() async {
+  void _addOrUpdateTrueOrFalse({String? docId}) async {
     if (_formKey.currentState!.validate()) {
-      final exerciseData = {
+      final data = {
         'statement': _statementController.text.trim(),
         'isTrue': _isTrue,
       };
 
-      try {
-        // Query the Firestore collection to get existing exercise IDs
-        final existingExercises = await FirebaseFirestore.instance
-            .collection('levels')
-            .doc(_selectedLevel)
-            .collection('trueOrFalse')
-            .get();
+      CollectionReference collection = FirebaseFirestore.instance
+          .collection('levels')
+          .doc(_selectedLevel)
+          .collection('trueOrFalse');
 
-        // Extract existing IDs
-        final existingIds = existingExercises.docs.map((exercise) => exercise.id);
-
-        // Find the next available ID
-        int nextId = 1;
-        while (existingIds.contains('statementId$nextId')) {
-          nextId++;
-        }
-        final newExerciseId = 'statementId$nextId';
-
-        // Add the exercise with the new ID
-        await FirebaseFirestore.instance
-            .collection('levels')
-            .doc(_selectedLevel)
-            .collection('trueOrFalse')
-            .doc(newExerciseId)
-            .set(exerciseData);
-        _clearForm();
-      } catch (error) {
-        // Handle errors here
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(_translate('Failed to add true or false exercise: $error'))),
-        );
+      if (docId == null) {
+        await collection.add(data);
+      } else {
+        await collection.doc(docId).update(data);
       }
+
+      _clearForm();
     }
   }
 
@@ -66,62 +46,30 @@ class _TrueOrFalseScreenState extends State<TrueOrFalseScreen> {
       _isTrue = true;
     });
   }
-  Future<void> _updateTrueOrFalseExercise(String exerciseId) async {
-    if (_formKey.currentState!.validate()) {
-      final exerciseData = {
-        'statement': _statementController.text.trim(),
-        'isTrue': _isTrue,
-      };
 
-      try {
-        await FirebaseFirestore.instance
-            .collection('levels')
-            .doc(_selectedLevel)
-            .collection('trueOrFalse')
-            .doc(exerciseId)
-            .update(exerciseData);
-        _clearForm();
-      } catch (error) {
-        // Handle errors here
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update true or false exercise: $error')),
-        );
-      }
-    }
-  }
-
-  Future<void> _deleteTrueOrFalseExercise(String exerciseId) async {
+  Future<void> _deleteTrueOrFalse(String docId) async {
     await showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Delete True/False Exercise'),
-          content: Text('Are you sure you want to delete this exercise?'),
+          title: Text('Delete True/False'),
+          content: Text('Are you sure you want to delete this item?'),
           actions: <Widget>[
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              onPressed: () => Navigator.of(context).pop(),
               child: Text('Cancel'),
             ),
             TextButton(
               onPressed: () async {
-                try {
-                  await FirebaseFirestore.instance
-                      .collection('levels')
-                      .doc(_selectedLevel)
-                      .collection('trueOrFalse')
-                      .doc(exerciseId)
-                      .delete();
-                  Navigator.of(context).pop();
-                } catch (error) {
-                  // Handle error
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to delete exercise: $error')),
-                  );
-                }
+                await FirebaseFirestore.instance
+                    .collection('levels')
+                    .doc(_selectedLevel)
+                    .collection('trueOrFalse')
+                    .doc(docId)
+                    .delete();
+                Navigator.of(context).pop();
               },
-              child: Text('Yes'),
+              child: Text('Delete'),
             ),
           ],
         );
@@ -129,14 +77,45 @@ class _TrueOrFalseScreenState extends State<TrueOrFalseScreen> {
     );
   }
 
-  // Remaining code for updating and deleting exercises remains the same
+  Widget _trueOrFalseForm({bool isUpdating = false, String? docId, Map<String, dynamic>? data}) {
+    if (data != null) {
+      _statementController.text = data['statement'];
+      _isTrue = data['isTrue'];
+    }
+
+    return Form(
+      key: _formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextFormField(
+            controller: _statementController,
+            decoration: InputDecoration(labelText: 'Statement'),
+            validator: (value) => value!.isEmpty ? 'Please enter a statement' : null,
+          ),
+          SwitchListTile(
+            title: Text('Is True'),
+            value: _isTrue,
+            onChanged: (bool value) {
+              setState(() {
+                _isTrue = value;
+              });
+            },
+          ),
+          ElevatedButton(
+            onPressed: () => _addOrUpdateTrueOrFalse(docId: docId),
+            child: Text(isUpdating ? 'Update' : 'Add'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_translate('True/False Exercises for Level $_selectedLevel')),
-
+        title: Text('True/False Exercises for Level $_selectedLevel'),
       ),
       body: Column(
         children: [
@@ -149,7 +128,7 @@ class _TrueOrFalseScreenState extends State<TrueOrFalseScreen> {
                 });
               }
             },
-            items: <String>['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] // Add more levels if needed
+            items: <String>['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
                 .map<DropdownMenuItem<String>>((String value) {
               return DropdownMenuItem<String>(
                 value: value,
@@ -167,89 +146,44 @@ class _TrueOrFalseScreenState extends State<TrueOrFalseScreen> {
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator());
-                } else {
-                  final exercises = snapshot.data!.docs;
-                  return ListView.builder(
-                    itemCount: exercises.length,
-                    itemBuilder: (context, index) {
-                      final exercise = exercises[index];
-                      return Card(
-                        child: ListTile(
-                          title: Text(_translate('Exercise ${exercise.id}: ${exercise['statement']}')),
-                          subtitle: Text(_translate('Statement: ${exercise['statement']}')),
-                          onTap: () {
-                            // Remaining code for updating and deleting exercises remains the same
-                            // Show dialog to update true/false exercise
-                            _statementController.text = exercise['statement'];
-                            _isTrue = exercise['isTrue'];
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  title: Text(_translate('Update True/False Exercise')),
-                                  content: Form(
-                                    key: _formKey,
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        TextFormField(
-                                          controller: _statementController,
-                                          decoration: InputDecoration(labelText: _translate('Statement')),
-                                          validator: (value) {
-                                            if (value == null || value.isEmpty) {
-                                              return _translate('Please enter a statement');
-                                            }
-                                            return null;
-                                          },
-                                        ),
-                                        Row(
-                                          children: [
-                                            Text(_translate('Is True: ')),
-                                            Checkbox(
-                                              value: _isTrue,
-                                              onChanged: (value) {
-                                                setState(() {
-                                                  _isTrue = value!;
-                                                });
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.of(context).pop();
-                                      },
-                                      child: Text(_translate('Cancel')),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        _updateTrueOrFalseExercise(exercise.id);
-                                        Navigator.of(context).pop();
-                                      },
-                                      child: Text(_translate('Update')),
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          },
-                          trailing: IconButton(
-                            icon: Icon(Icons.delete),
-                            onPressed: () {
-                              // Remaining code for updating and deleting exercises remains the same
-                              _deleteTrueOrFalseExercise(exercise.id);
-                            },
-                          ),
-                        ),
-                      );
-                    },
-                  );
                 }
+
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return Center(child: Text('No true/false exercises found'));
+                }
+
+                return ListView.builder(
+                  itemCount: snapshot.data!.docs.length,
+                  itemBuilder: (context, index) {
+                    final doc = snapshot.data!.docs[index];
+                    final docData = doc.data() as Map<String, dynamic>;
+                    return Card(
+                      child: ListTile(
+                        title: Text(docData['statement']),
+                        subtitle: Text(docData['isTrue'] ? 'True' : 'False'),
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: Text('Edit True/False Exercise'),
+                                content: _trueOrFalseForm(
+                                  isUpdating: true,
+                                  docId: doc.id,
+                                  data: docData,
+                                ),
+                              );
+                            },
+                          );
+                        },
+                        trailing: IconButton(
+                          icon: Icon(Icons.delete),
+                          onPressed: () => _deleteTrueOrFalse(doc.id),
+                        ),
+                      ),
+                    );
+                  },
+                );
               },
             ),
           ),
@@ -257,71 +191,20 @@ class _TrueOrFalseScreenState extends State<TrueOrFalseScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
+          _clearForm();
           showDialog(
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
-                title: Text(_translate('Add True/False Exercise')),
-                content: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TextFormField(
-                        controller: _statementController,
-                        decoration: InputDecoration(labelText: _translate('Statement')),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return _translate('Please enter a statement');
-                          }
-                          return null;
-                        },
-                      ),
-                      Row(
-                        children: [
-                          Text(_translate('Is True: ')),
-                          Checkbox(
-                            value: _isTrue,
-                            onChanged: (value) {
-                              setState(() {
-                                _isTrue = value!;
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: Text(_translate('Cancel')),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      _addTrueOrFalseExercise();
-                      Navigator.of(context).pop();
-                    },
-                    child: Text(_translate('Add')),
-                  ),
-                ],
+                title: Text('Add True/False Exercise'),
+                content: _trueOrFalseForm(),
               );
             },
           );
         },
         child: Icon(Icons.add),
-          backgroundColor: const Color(0xFF34559C),
+        backgroundColor: const Color(0xFF34559C),
       ),
     );
-  }
-
-  String _translate(String text) {
-    // Here you can implement your translation logic
-    // For now, let's just return the input text
-    return text;
   }
 }
