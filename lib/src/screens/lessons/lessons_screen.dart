@@ -94,6 +94,33 @@ class _LessonsScreenState extends State<LessonsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Lessons for Level $_selectedLevel'),
+        actions: <Widget>[
+          DropdownButton<String>(
+            value: _selectedLevel,
+            icon: Icon(Icons.arrow_drop_down, color: Colors.white),
+            iconSize: 24,
+            elevation: 16,
+            style: TextStyle(color: Colors.black),
+            underline: Container(
+              height: 2,
+              color: const Color(0xFF34559C),
+            ),
+            onChanged: (String? newValue) {
+              setState(() {
+                _selectedLevel = newValue!;
+              });
+            },
+            items: <String>['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+                .map<DropdownMenuItem<String>>((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(value),
+              );
+            }).toList(),
+          ),
+
+        ],
+        backgroundColor: const Color(0xFF34559C),
       ),
       body: StreamBuilder<List<Lesson>>(
         stream: _firestoreService.getLessonsForLevel(_selectedLevel),
@@ -117,7 +144,32 @@ class _LessonsScreenState extends State<LessonsScreen> {
                   onTap: () => _showAddEditLessonDialog(lesson: lesson),
                   trailing: IconButton(
                     icon: Icon(Icons.delete),
-                    onPressed: () => _deleteLesson(lesson.id),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: Text('Delete Lesson'),
+                            content: Text('Are you sure you want to delete this lesson?'),
+                            actions: <Widget>[
+                              TextButton(
+                                child: Text('Cancel'),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                              TextButton(
+                                child: Text('Delete'),
+                                onPressed: () {
+                                  _deleteLesson(lesson.id);
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
                   ),
                 ),
               );
