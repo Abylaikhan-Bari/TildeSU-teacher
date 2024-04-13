@@ -91,7 +91,8 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
     final isSignInForm = _authFormType == AuthFormType.signIn;
     return Scaffold(
       appBar: AppBar(
-        title: Text(isSignInForm ? 'Login' : 'Register'),
+        title: Text(isSignInForm ? 'Login' : 'Register', style: TextStyle(color: Colors.white)),
+
         backgroundColor: Color(0xFF34559C),
       ),
       body: SingleChildScrollView(
@@ -127,7 +128,7 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
                   labelText: 'Password',
                   border: OutlineInputBorder(),
                   suffixIcon: IconButton(
-                    icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+                    icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
                     onPressed: _togglePasswordVisibility,
                   ),
                 ),
@@ -149,7 +150,7 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
                         labelText: 'Confirm Password',
                         border: OutlineInputBorder(),
                         suffixIcon: IconButton(
-                          icon: Icon(_obscureConfirmPassword ? Icons.visibility_off : Icons.visibility),
+                          icon: Icon(_obscureConfirmPassword ? Icons.visibility : Icons.visibility_off),
                           onPressed: _toggleConfirmPasswordVisibility,
                         ),
                       ),

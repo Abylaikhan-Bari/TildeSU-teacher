@@ -93,7 +93,7 @@ class _LessonsScreenState extends State<LessonsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Lessons for Level $_selectedLevel'),
+        title: Text('Lessons for Level $_selectedLevel', style: TextStyle(color: Colors.white)),
         actions: <Widget>[
           DropdownButton<String>(
             value: _selectedLevel,
