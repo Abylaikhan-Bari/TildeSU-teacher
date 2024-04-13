@@ -10,7 +10,7 @@ class _ImageQuizzesScreenState extends State<ImageQuizzesScreen> {
   final _formKey = GlobalKey<FormState>();
   final _questionController = TextEditingController();
   final _imageUrlController = TextEditingController();
-  final List<TextEditingController> _optionControllers = List.generate(4, (index) => TextEditingController());
+  List<TextEditingController> _optionControllers = List.generate(4, (index) => TextEditingController());
   int _correctOptionIndex = 0;
   String _selectedLevel = 'A1';
 
@@ -37,10 +37,8 @@ class _ImageQuizzesScreenState extends State<ImageQuizzesScreen> {
           .collection('imageQuizzes');
 
       if (quizId == null) {
-        // Adding a new quiz
         await collectionReference.add(quizData);
       } else {
-        // Updating an existing quiz
         await collectionReference.doc(quizId).update(quizData);
       }
 
@@ -58,7 +56,6 @@ class _ImageQuizzesScreenState extends State<ImageQuizzesScreen> {
   }
 
   Future<void> _deleteImageQuiz(String quizId) async {
-    // Show confirmation dialog before deleting
     final shouldDelete = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
@@ -98,93 +95,72 @@ class _ImageQuizzesScreenState extends State<ImageQuizzesScreen> {
     }
   }
 
-  String _translate(String key) {
-    // Add your translation logic here. For now, we'll just return the key.
-    return key;
-  }
-
   Widget _buildForm({required bool isUpdating, String? quizId}) {
     return Form(
       key: _formKey,
       child: SingleChildScrollView(
-      child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        TextFormField(
-          controller: _questionController,
-          decoration: InputDecoration(labelText: _translate('Question')),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return _translate('Please enter a question');
-            }
-            return null;
-          },
-        ),
-        TextFormField(
-          controller: _imageUrlController,
-          decoration: InputDecoration(labelText: _translate('Image URL')),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return _translate('Please enter an image URL');
-            }
-            return null;
-          },
-        ),
-        ...List.generate(_optionControllers.length, (index) {
-          return TextFormField(
-            controller: _optionControllers[index],
-            decoration: InputDecoration(labelText: _translate('Option ${index + 1}')),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return _translate('Please enter option ${index + 1}');
-              }
-              return null;
-            },
-          );
-        }),
-        DropdownButtonFormField<int>(
-          value: _correctOptionIndex,
-          onChanged: (newValue) {
-            if (newValue != null) {
-              setState(() {
-                _correctOptionIndex = newValue;
-              });
-            }
-          },
-          items: List.generate(_optionControllers.length, (index) {
-            return DropdownMenuItem<int>(
-              value: index,
-              child: Text(_translate('Option ${index + 1}')),
-            );
-          }),
-          decoration: InputDecoration(labelText: _translate('Correct Option Index')),
-          validator: (value) {
-            if (value == null) {
-              return _translate('Please select the correct option index');
-            }
-            return null;
-          },
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
+            TextFormField(
+              controller: _questionController,
+              decoration: InputDecoration(labelText: 'Question'),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter a question';
+                }
+                return null;
               },
-              child: Text(_translate('Cancel')),
             ),
-            TextButton(
-              onPressed: () {
-                _addOrUpdateQuiz(quizId: isUpdating ? quizId : null);
-                Navigator.of(context).pop();
+            TextFormField(
+              controller: _imageUrlController,
+              decoration: InputDecoration(labelText: 'Image URL'),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter an image URL';
+                }
+                return null;
               },
-              child: Text(isUpdating ? _translate('Update') : _translate('Add')),
+            ),
+            ...List.generate(_optionControllers.length, (index) {
+              return TextFormField(
+                controller: _optionControllers[index],
+                decoration: InputDecoration(labelText: 'Option ${index + 1}'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter option ${index + 1}';
+                  }
+                  return null;
+                },
+              );
+            }),
+            DropdownButtonFormField<int>(
+              value: _correctOptionIndex,
+              onChanged: (newValue) {
+                setState(() {
+                  _correctOptionIndex = newValue!;
+                });
+              },
+              items: List.generate(4, (index) {
+                return DropdownMenuItem<int>(
+                  value: index,
+                  child: Text('Option ${index + 1}'),
+                );
+              }),
+              decoration: InputDecoration(labelText: 'Correct Option Index'),
+              validator: (value) {
+                if (value == null) {
+                  return 'Please select the correct option index';
+                }
+                return null;
+              },
+            ),
+            ElevatedButton(
+              onPressed: () => _addOrUpdateQuiz(quizId: isUpdating ? quizId : null),
+              child: Text(isUpdating ? 'Update' : 'Add'),
             ),
           ],
         ),
-      ],
-    ),
       ),
     );
   }
@@ -193,18 +169,16 @@ class _ImageQuizzesScreenState extends State<ImageQuizzesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_translate('Image Quizzes for Level') + ' $_selectedLevel'),
+        title: Text('Image Quizzes for Level $_selectedLevel'),
       ),
       body: Column(
         children: [
           DropdownButton<String>(
             value: _selectedLevel,
             onChanged: (String? newValue) {
-              if (newValue != null) {
-                setState(() {
-                  _selectedLevel = newValue;
-                });
-              }
+              setState(() {
+                _selectedLevel = newValue!;
+              });
             },
             items: <String>['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
                 .map<DropdownMenuItem<String>>((String value) {
@@ -226,39 +200,40 @@ class _ImageQuizzesScreenState extends State<ImageQuizzesScreen> {
                   return Center(child: CircularProgressIndicator());
                 }
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return Center(child: Text(_translate('No image quizzes found')));
+                  return Center(child: Text('No image quizzes found'));
                 }
-                return ListView(
-                  children: snapshot.data!.docs.map((DocumentSnapshot document) {
-                    Map<String, dynamic> quiz = document.data() as Map<String, dynamic>;
-                    return ListTile(
-                      title: Text(quiz['imageQuestion'] ?? ''),
-                      subtitle: Text(quiz['imageOptions'][quiz['correctImageOptionIndex']].toString()),
-                      onTap: () {
-                        // Fill in the controllers with the current quiz info
-                        _questionController.text = quiz['imageQuestion'];
-                        _imageUrlController.text = quiz['imageUrl'];
-                        _optionControllers.asMap().forEach((index, controller) {
-                          controller.text = quiz['imageOptions'][index];
-                        });
-                        _correctOptionIndex = quiz['correctImageOptionIndex'];
-                        // Show the update dialog
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: Text(_translate('Update Image Quiz')),
-                              content: _buildForm(isUpdating: true, quizId: document.id),
-                            );
-                          },
-                        );
-                      },
-                      trailing: IconButton(
-                        icon: Icon(Icons.delete),
-                        onPressed: () => _deleteImageQuiz(document.id),
+                return ListView.builder(
+                  itemCount: snapshot.data!.docs.length,
+                  itemBuilder: (context, index) {
+                    var quiz = snapshot.data!.docs[index];
+                    return Card(
+                      child: ListTile(
+                        title: Text(quiz['imageQuestion']),
+                        subtitle: Text('Correct Answer: ' + quiz['imageOptions'][quiz['correctImageOptionIndex']]),
+                        onTap: () {
+                          _questionController.text = quiz['imageQuestion'];
+                          _imageUrlController.text = quiz['imageUrl'];
+                          _optionControllers.asMap().forEach((index, controller) {
+                            controller.text = quiz['imageOptions'][index];
+                          });
+                          _correctOptionIndex = quiz['correctImageOptionIndex'];
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: Text('Update Image Quiz'),
+                                content: _buildForm(isUpdating: true, quizId: quiz.id),
+                              );
+                            },
+                          );
+                        },
+                        trailing: IconButton(
+                          icon: Icon(Icons.delete),
+                          onPressed: () => _deleteImageQuiz(quiz.id),
+                        ),
                       ),
                     );
-                  }).toList(),
+                  },
                 );
               },
             ),
@@ -272,14 +247,14 @@ class _ImageQuizzesScreenState extends State<ImageQuizzesScreen> {
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
-                title: Text(_translate('Add Image Quiz')),
+                title: Text('Add Image Quiz'),
                 content: _buildForm(isUpdating: false),
               );
             },
           );
         },
         child: Icon(Icons.add),
-          backgroundColor: const Color(0xFF34559C),
+        backgroundColor: const Color(0xFF34559C),
       ),
     );
   }

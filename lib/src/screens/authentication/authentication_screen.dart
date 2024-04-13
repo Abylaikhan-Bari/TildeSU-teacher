@@ -11,41 +11,45 @@ class AuthenticationScreen extends StatefulWidget {
 }
 
 class _AuthenticationScreenState extends State<AuthenticationScreen> {
-  final _formKey = GlobalKey<FormState>(); // Add a key for the form
+  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _authService = AuthService();
+  final _confirmPasswordController = TextEditingController();
+  final AuthService _authService = AuthService();
   AuthFormType _authFormType = AuthFormType.signIn;
-  String _errorMessage = ''; // To display error messages
+  String _errorMessage = '';
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  void _auth() async {
+  Future<void> _auth() async {
     if (_formKey.currentState!.validate()) {
       try {
-        UserCredential userCredential;
+        User? user;
         if (_authFormType == AuthFormType.signIn) {
-          userCredential = (await _authService.signIn(
+          user = await _authService.signIn(
             _emailController.text.trim(),
             _passwordController.text.trim(),
-          )) as UserCredential;
+          );
         } else {
-          userCredential = (await _authService.signUp(
+          user = await _authService.signUp(
             _emailController.text.trim(),
             _passwordController.text.trim(),
-          )) as UserCredential;
+          );
         }
-        if (userCredential.user != null) {
+        // Check if the sign in / sign up was successful by checking if user is not null
+        if (user != null) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => AdminHome()),
           );
         } else {
-          // If userCredential.user is null, handle it accordingly
           setState(() {
             _errorMessage = 'Authentication failed, please try again.';
           });
@@ -60,8 +64,25 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
 
   void _toggleFormType() {
     setState(() {
-      _errorMessage = ''; // Clear error message when switching form type
-      _authFormType = _authFormType == AuthFormType.signIn ? AuthFormType.signUp : AuthFormType.signIn;
+      _authFormType = _authFormType == AuthFormType.signIn
+          ? AuthFormType.signUp
+          : AuthFormType.signIn;
+      _errorMessage = '';
+      _emailController.clear();
+      _passwordController.clear();
+      _confirmPasswordController.clear();
+    });
+  }
+
+  void _togglePasswordVisibility() {
+    setState(() {
+      _obscurePassword = !_obscurePassword;
+    });
+  }
+
+  void _toggleConfirmPasswordVisibility() {
+    setState(() {
+      _obscureConfirmPassword = !_obscureConfirmPassword;
     });
   }
 
@@ -70,8 +91,8 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
     final isSignInForm = _authFormType == AuthFormType.signIn;
     return Scaffold(
       appBar: AppBar(
-        title: Text(isSignInForm ? 'Sign In' : 'Sign Up', style: const TextStyle(color: Colors.white)),
-        backgroundColor: Color(0xFF34559C), // Add a consistent color theme
+        title: Text(isSignInForm ? 'Login' : 'Register'),
+        backgroundColor: Color(0xFF34559C),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
@@ -80,60 +101,84 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SizedBox(height: MediaQuery.of(context).size.height * 0.1), // Add some spacing
-              Text(
-                isSignInForm ? 'Welcome Back!' : 'Create Account',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 24),
+              SizedBox(height: 40),
+              // Make sure the image path is correct.
+              Image.asset('assets/logo.png', height: 100, errorBuilder: (context, error, stackTrace) {
+                return Icon(Icons.error); // Fallback to an icon if the image fails to load
+              }),
+              SizedBox(height: 40),
               TextFormField(
                 controller: _emailController,
                 decoration: InputDecoration(
-                  border: OutlineInputBorder(),
                   labelText: 'Email',
-                  prefixIcon: Icon(Icons.email),
+                  border: OutlineInputBorder(),
                 ),
-                validator: (value) => (value == null || value.isEmpty) ? 'Please enter your email' : null,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your email';
+                  }
+                  return null;
+                },
               ),
               SizedBox(height: 16),
               TextFormField(
                 controller: _passwordController,
                 decoration: InputDecoration(
-                  border: OutlineInputBorder(),
                   labelText: 'Password',
-                  prefixIcon: Icon(Icons.lock),
+                  border: OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+                    onPressed: _togglePasswordVisibility,
+                  ),
                 ),
-                obscureText: true,
-                validator: (value) => (value == null || value.isEmpty) ? 'Please enter your password' : null,
+                obscureText: _obscurePassword,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your password';
+                  }
+                  return null;
+                },
               ),
+              if (_authFormType == AuthFormType.signUp)
+                Column(
+                  children: [
+                    SizedBox(height: 16),
+                    TextFormField(
+                      controller: _confirmPasswordController,
+                      decoration: InputDecoration(
+                        labelText: 'Confirm Password',
+                        border: OutlineInputBorder(),
+                        suffixIcon: IconButton(
+                          icon: Icon(_obscureConfirmPassword ? Icons.visibility_off : Icons.visibility),
+                          onPressed: _toggleConfirmPasswordVisibility,
+                        ),
+                      ),
+                      obscureText: _obscureConfirmPassword,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please confirm your password';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
               SizedBox(height: 24),
               if (_errorMessage.isNotEmpty)
-                Text(_errorMessage, style: TextStyle(color: Colors.red, fontSize: 14)),
-              SizedBox(height: 24),
+                Text(_errorMessage, style: TextStyle(color: Colors.red)),
+              SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _auth,
-                child: Text(
-                  isSignInForm ? 'Sign In' : 'Sign Up',
-                  style: TextStyle(color: Colors.white), // Ensuring text color is white
-                ),
+                child: Text(isSignInForm ? 'Login' : 'Register'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF34559C),
-                  minimumSize: Size(double.infinity, 50), // Full width and fixed height
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
-                  ),
+                  foregroundColor: Colors.white, backgroundColor: Color(0xFF34559C), minimumSize: Size(double.infinity, 50),
                 ),
               ),
-              SizedBox(height: 12),
               TextButton(
                 onPressed: _toggleFormType,
-                child: Text(
-                  isSignInForm ? 'Need an account? Sign up' : 'Have an account? Sign in',
-                  style: TextStyle(
-                    color: Color(0xFF34559C),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: Text(isSignInForm
+                    ? 'Don\'t have an account? Register'
+                    : 'Already have an account? Login'),
               ),
             ],
           ),

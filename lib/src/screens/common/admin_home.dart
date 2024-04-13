@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tildesu_teacher/src/screens/lessons/lessons_screen.dart';
 import 'package:tildesu_teacher/src/screens/puzzles/puzzles_screen.dart';
 import 'package:tildesu_teacher/src/screens/quizzes/quizzes_screen.dart';
 import 'package:tildesu_teacher/src/screens/true_or_false/true_or_false_screen.dart';
@@ -16,7 +17,6 @@ class AdminHome extends StatefulWidget {
 class _AdminHomeState extends State<AdminHome> {
   int _selectedIndex = 0;
 
-  // Updated to a function to create a new instance of the screen on each call
   Widget _getScreen(int index) {
     switch (index) {
       case 0:
@@ -46,7 +46,7 @@ class _AdminHomeState extends State<AdminHome> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Confirm Sign Out'),
-          content: const SingleChildScrollView(
+          content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
                 Text('Are you sure you want to sign out?'),
@@ -64,7 +64,7 @@ class _AdminHomeState extends State<AdminHome> {
               child: Text('Sign Out'),
               onPressed: () {
                 Navigator.of(context).pop();
-                _signOut(context); // Call the sign-out method
+                _signOut(context);
               },
             ),
           ],
@@ -75,63 +75,112 @@ class _AdminHomeState extends State<AdminHome> {
 
   void _signOut(BuildContext context) async {
     await AuthService().signOut(); // Sign out from Firebase Auth
-
-    // Navigate back to the authentication screen
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (context) => AuthenticationScreen()),
           (Route<dynamic> route) => false,
     );
   }
 
+  Future<bool> _onWillPop() async {
+    return (await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Exit App'),
+        content: Text('Do you really want to exit the app?'),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('No'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text('Yes'),
+          ),
+        ],
+      ),
+    )) ?? false;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'TildeSU Admin',
-          style: TextStyle(color: Colors.white),
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'TildeSU Admin',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: const Color(0xFF34559C),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.exit_to_app, color: Colors.white),
+              onPressed: () => _confirmSignOut(context),
+            ),
+          ],
         ),
-        backgroundColor: const Color(0xFF34559C),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.exit_to_app, color: Colors.white), // Set icon color to white for visibility
-            onPressed: () => _confirmSignOut(context),
+        drawer: Drawer(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: <Widget>[
+              DrawerHeader(
+                child: Text('Admin Menu', style: TextStyle(color: Colors.white)),
+                decoration: BoxDecoration(
+                  color: Color(0xFF34559C),
+                ),
+              ),
+              ListTile(
+                leading: Icon(Icons.home),
+                title: Text('Home'),
+                onTap: () {
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.book),
+                title: Text('Lessons'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => LessonsScreen()));
+                },
+              ),
+              // Add other ListTile widgets for different screens as needed
+            ],
           ),
-        ],
-      ),
-      body: Center(
-        child: _getScreen(_selectedIndex),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.question_answer),
-            label: 'Quizzes',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.extension),
-            label: 'Puzzles',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.check_circle_outline),
-            label: 'True/False',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.abc),
-            label: 'Dictionary',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add_chart_sharp),
-            label: 'Image Quiz',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        backgroundColor: const Color(0xFF34559C), // Set the background color
-        selectedItemColor: Colors.white, // Set the selected item color to white for visibility
-        unselectedItemColor: Colors.white60, // Set a lighter color for unselected items for visibility
-        type: BottomNavigationBarType.fixed, // Fixed type to maintain the color
+        ),
+        body: Center(
+          child: _getScreen(_selectedIndex),
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.question_answer),
+              label: 'Quizzes',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.extension),
+              label: 'Puzzles',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.check_circle_outline),
+              label: 'True/False',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.abc),
+              label: 'Dictionary',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.add_chart_sharp),
+              label: 'Image Quiz',
+            ),
+          ],
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          backgroundColor: const Color(0xFF34559C),
+          selectedItemColor: Colors.white,
+          unselectedItemColor: Colors.white60,
+          type: BottomNavigationBarType.fixed,
+        ),
       ),
     );
   }

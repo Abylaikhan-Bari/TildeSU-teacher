@@ -28,10 +28,12 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
 
   Future<void> _addOrUpdateQuiz({String? quizId}) async {
     if (_formKey.currentState!.validate()) {
+      List<String> options = _optionControllers.map((controller) => controller.text.trim()).toList();
       final quizData = {
         'question': _questionController.text.trim(),
-        'options': _optionControllers.map((controller) => controller.text.trim()).toList(),
+        'options': options,
         'correctOptionIndex': _correctOptionIndex,
+        'correctAnswer': options[_correctOptionIndex],
       };
 
       final collectionReference = FirebaseFirestore.instance
@@ -66,26 +68,18 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
           content: Text('Are you sure you want to delete this quiz?'),
           actions: <Widget>[
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              onPressed: () => Navigator.of(context).pop(),
               child: Text('Cancel'),
             ),
             TextButton(
               onPressed: () async {
-                try {
-                  await FirebaseFirestore.instance
-                      .collection('levels')
-                      .doc(_selectedLevel)
-                      .collection('quizzes')
-                      .doc(quizId)
-                      .delete();
-                  Navigator.of(context).pop();
-                } catch (error) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to delete quiz: $error')),
-                  );
-                }
+                await FirebaseFirestore.instance
+                    .collection('levels')
+                    .doc(_selectedLevel)
+                    .collection('quizzes')
+                    .doc(quizId)
+                    .delete();
+                Navigator.of(context).pop();
               },
               child: Text('Delete'),
             ),
@@ -96,11 +90,19 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
   }
 
   String _translate(String key) {
-    // Add your translation logic here
+    // Replace this function with your translation logic or remove it if not needed.
     return key;
   }
 
-  Widget _buildQuizForm({bool isUpdating = false, String? quizId}) {
+  Widget _buildQuizForm({bool isUpdating = false, String? quizId, Map<String, dynamic>? quizData}) {
+    if (quizData != null) {
+      _questionController.text = quizData['question'];
+      _correctOptionIndex = quizData['correctOptionIndex'];
+      quizData['options'].asMap().forEach((index, option) {
+        _optionControllers[index].text = option;
+      });
+    }
+
     return Form(
       key: _formKey,
       child: Column(
@@ -143,19 +145,16 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
                 child: Text('Option ${index + 1}'),
               );
             }),
-            decoration: InputDecoration(labelText: 'Correct Option Index'),
+            decoration: InputDecoration(labelText: 'Correct Option'),
             validator: (value) {
               if (value == null) {
-                return 'Please select the correct option index';
+                return 'Please select the correct option';
               }
               return null;
             },
           ),
           ElevatedButton(
-            onPressed: () {
-              _addOrUpdateQuiz(quizId: isUpdating ? quizId : null);
-              Navigator.of(context).pop(); // Dismiss the dialog
-            },
+            onPressed: () => _addOrUpdateQuiz(quizId: quizId),
             child: Text(isUpdating ? 'Update' : 'Add'),
           ),
         ],
@@ -207,28 +206,25 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
                   itemBuilder: (context, index) {
                     final quiz = snapshot.data!.docs[index];
                     final quizData = quiz.data() as Map<String, dynamic>;
-                    return ListTile(
-                      title: Text(quizData['question']),
-                      subtitle: Text('Correct Answer: Option ${quizData['correctOptionIndex'] + 1}'),
-                      onTap: () {
-                        _questionController.text = quizData['question'];
-                        _optionControllers.asMap().forEach((index, controller) {
-                          controller.text = quizData['options'][index];
-                        });
-                        _correctOptionIndex = quizData['correctOptionIndex'];
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: Text('Update Quiz'),
-                              content: _buildQuizForm(isUpdating: true, quizId: quiz.id),
-                            );
-                          },
-                        );
-                      },
-                      trailing: IconButton(
-                        icon: Icon(Icons.delete),
-                        onPressed: () => _deleteQuiz(quiz.id),
+                    return Card(
+                      child: ListTile(
+                        title: Text(quizData['question']),
+                        subtitle: Text('Correct Answer: ${quizData['options'][quizData['correctOptionIndex']]}'),
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: Text('Update Quiz'),
+                                content: _buildQuizForm(isUpdating: true, quizId: quiz.id, quizData: quizData),
+                              );
+                            },
+                          );
+                        },
+                        trailing: IconButton(
+                          icon: Icon(Icons.delete),
+                          onPressed: () => _deleteQuiz(quiz.id),
+                        ),
                       ),
                     );
                   },
@@ -246,7 +242,7 @@ class _QuizzesScreenState extends State<QuizzesScreen> {
             builder: (BuildContext context) {
               return AlertDialog(
                 title: Text('Add Quiz'),
-                content: _buildQuizForm(isUpdating: false),
+                content: _buildQuizForm(),
               );
             },
           );
