@@ -3,11 +3,12 @@ import 'package:tildesu_teacher/src/screens/lessons/lessons_screen.dart';
 import 'package:tildesu_teacher/src/screens/puzzles/puzzles_screen.dart';
 import 'package:tildesu_teacher/src/screens/quizzes/quizzes_screen.dart';
 import 'package:tildesu_teacher/src/screens/true_or_false/true_or_false_screen.dart';
+import 'package:tildesu_teacher/src/screens/useful_tips/useful_tips.dart';
 import 'package:tildesu_teacher/src/services/auth_service.dart';
 
 import '../authentication/authentication_screen.dart';
 import '../dictionary_cards/dictionary_cards_screen.dart';
-import '../image_quiz/image_quiz_screen.dart'; // Import your authentication service
+import '../image_quiz/image_quiz_screen.dart';
 
 class AdminHome extends StatefulWidget {
   @override
@@ -142,6 +143,14 @@ class _AdminHomeState extends State<AdminHome> {
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(context, MaterialPageRoute(builder: (context) => LessonsScreen()));
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.lightbulb),
+                title: Text('Useful Tips'), // New drawer item for Useful Tips
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => UsefulTipsScreen()));
                 },
               ),
               // Add other ListTile widgets for different screens as needed
