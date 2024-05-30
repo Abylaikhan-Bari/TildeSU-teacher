@@ -91,4 +91,20 @@ class FirestoreService {
           .toList(),
     );
   }
+  // Chat-related methods
+  Future<void> sendMessage(String chatId, Map<String, dynamic> messageData) async {
+    await _db.collection('chats').doc(chatId).collection('messages').add(messageData);
+  }
+
+  Stream<List<QueryDocumentSnapshot>> getMessagesForChat(String chatId) {
+    return _db.collection('chats').doc(chatId).collection('messages')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs);  // Directly return List<QueryDocumentSnapshot>
+  }
+
+
+  Stream<QuerySnapshot> getDistinctUsersWithMessages() {
+    return _db.collection('chats').snapshots();
+  }
 }

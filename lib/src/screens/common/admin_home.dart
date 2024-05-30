@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tildesu_teacher/src/screens/chat/chat_screen.dart';
 import 'package:tildesu_teacher/src/screens/lessons/lessons_screen.dart';
 import 'package:tildesu_teacher/src/screens/puzzles/puzzles_screen.dart';
 import 'package:tildesu_teacher/src/screens/quizzes/quizzes_screen.dart';
@@ -153,7 +154,14 @@ class _AdminHomeState extends State<AdminHome> {
                   Navigator.push(context, MaterialPageRoute(builder: (context) => UsefulTipsScreen()));
                 },
               ),
-              // Add other ListTile widgets for different screens as needed
+              ListTile(
+                leading: Icon(Icons.chat),
+                title: Text('Chat'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => ChatScreen()));
+                },
+              ),
             ],
           ),
         ),
