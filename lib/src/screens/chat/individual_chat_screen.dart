@@ -98,27 +98,26 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(chatName),
+        title: Text(chatName, style: TextStyle(color: Colors.white)),
         backgroundColor: Color(0xFF34559C),
       ),
       body: Column(
         children: <Widget>[
           Expanded(
-            child: StreamBuilder<DocumentSnapshot>(
-              stream: _firestore.collection('chats').doc(widget.chatId).snapshots(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
-                if (snapshot.data == null || snapshot.data!.data() == null) {
-                  return Center(child: Text('No messages'));
-                }
-                var messages = List<Map<String, dynamic>>.from(snapshot.data!['messages']);
-                return ListView.builder(
-                  itemCount: messages.length,
-                  reverse: true,
-                  itemBuilder: (context, index) => _buildMessageItem(messages[index]),
-                );
-              },
-            ),
+              child: StreamBuilder<DocumentSnapshot>(
+                stream: _firestore.collection('chats').doc(widget.chatId).snapshots(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
+                  if (snapshot.data == null || snapshot.data!.data() == null) {
+                    return Center(child: Text('No messages'));
+                  }
+                  var messages = List<Map<String, dynamic>>.from(snapshot.data!['messages']);
+                  return ListView.builder(
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) => _buildMessageItem(messages[index]),
+                  );
+                },
+              )
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),

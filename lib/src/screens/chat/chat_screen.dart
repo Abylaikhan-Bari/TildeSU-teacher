@@ -16,7 +16,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('User Messages'),
+        title: Text('User Messages', style: TextStyle(color: Colors.white)),
         backgroundColor: Color(0xFF34559C),
       ),
       body: StreamBuilder<QuerySnapshot>(
@@ -36,18 +36,27 @@ class _ChatScreenState extends State<ChatScreen> {
               itemBuilder: (context, index) {
                 DocumentSnapshot doc = snapshot.data!.docs[index];
                 Map<String, dynamic> data = doc.data() as Map<String, dynamic>? ?? {};
-                String senderEmail = data['senderEmail'] as String? ?? 'Unknown';
+                String senderEmail = 'Unknown';
+                if (data.containsKey('messages') && data['messages'] is List) {
+                  List messages = data['messages'];
+                  if (messages.isNotEmpty && messages[0] is Map<String, dynamic>) {
+                    senderEmail = messages[0]['senderEmail'] ?? 'Unknown';
+                  }
+                }
 
-                return ListTile(
-                  title: Text(senderEmail),
-                  onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => IndividualChatScreen(
-                              chatId: doc.id,
-                              userEmail: senderEmail
-                          )
-                      )
+                return Card(
+                  margin: EdgeInsets.all(8.0),
+                  child: ListTile(
+                    title: Text(senderEmail),
+                    onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => IndividualChatScreen(
+                                chatId: doc.id,
+                                userEmail: senderEmail
+                            )
+                        )
+                    ),
                   ),
                 );
               }
