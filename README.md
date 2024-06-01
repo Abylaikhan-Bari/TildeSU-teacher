@@ -1,16 +1,17 @@
-# tildesu_teacher
+# TildeSU Teacher
 
-A new Flutter project.
+TildeSU Teacher is a Flutter application designed to help teachers manage and interact with their students in the TildeSU app. This project provides a platform for teachers to view messages and images sent by students, as well as respond to their queries.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+### Prerequisites
 
-A few resources to get you started if this is your first Flutter project:
+- [Flutter SDK](https://flutter.dev/docs/get-started/install)
+- [Android Studio](https://developer.android.com/studio) or [VS Code](https://code.visualstudio.com/)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Installation
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+1. Clone the repository:
+   ```sh
+   git clone https://github.com/Abylaikhan-Bari/TildeSU_teacher.git
+   cd TildeSU_teacher
