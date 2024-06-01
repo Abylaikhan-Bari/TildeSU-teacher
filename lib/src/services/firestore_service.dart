@@ -23,9 +23,9 @@ class FirestoreService {
   Stream<List<Exercise>> getExercises() {
     return _db.collection('exercises').snapshots().map(
           (snapshot) => snapshot.docs
-              .map((doc) => Exercise.fromFirestore(doc.data(), doc.id))
-              .toList(),
-        );
+          .map((doc) => Exercise.fromFirestore(doc.data(), doc.id))
+          .toList(),
+    );
   }
 
   Future<void> addLesson(Lesson lesson, String level) async {
@@ -64,10 +64,10 @@ class FirestoreService {
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map((doc) => Lesson.fromFirestore(
-                  doc.data() as Map<String, dynamic>, doc.id))
-              .toList(),
-        );
+          .map((doc) => Lesson.fromFirestore(
+          doc.data() as Map<String, dynamic>, doc.id))
+          .toList(),
+    );
   }
 
   Future<void> addUsefulTip(UsefulTip tip) async {
@@ -90,5 +90,20 @@ class FirestoreService {
           .map((doc) => UsefulTip.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
           .toList(),
     );
+  }
+
+  // Chat-related methods
+  Future<void> sendMessage(String chatId, Map<String, dynamic> messageData) async {
+    await _db.collection('chats').doc(chatId).update({
+      'messages': FieldValue.arrayUnion([messageData])
+    });
+  }
+
+  Stream<DocumentSnapshot> getMessagesForChat(String chatId) {
+    return _db.collection('chats').doc(chatId).snapshots();
+  }
+
+  Stream<QuerySnapshot> getDistinctUsersWithMessages() {
+    return _db.collection('chats').snapshots();
   }
 }

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 import 'package:tildesu_teacher/src/screens/common/admin_home.dart';
 import 'package:tildesu_teacher/src/screens/authentication/authentication_screen.dart';
 import 'package:tildesu_teacher/src/services/auth_service.dart';
+import 'package:tildesu_teacher/src/services/chat_service.dart';
+import 'package:tildesu_teacher/src/services/firestore_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,25 +35,32 @@ void main() async {
 class AdminApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'TildeSU admin',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.indigo,
-      ),
-      home: StreamBuilder<User?>(
-        stream: AuthService().user,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.active) {
-            User? user = snapshot.data;
-            return user == null ? AuthenticationScreen() : AdminHome();
-          }
-          return Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
-        },
+    return MultiProvider(
+      providers: [
+        Provider<AuthService>(create: (_) => AuthService()),
+        //Provider<ChatService>(create: (_) => ChatService()),
+        Provider<FirestoreService>(create: (_) => FirestoreService()),
+      ],
+      child: MaterialApp(
+        title: 'TildeSU admin',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          primarySwatch: Colors.indigo,
+        ),
+        home: StreamBuilder<User?>(
+          stream: AuthService().user,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.active) {
+              User? user = snapshot.data;
+              return user == null ? AuthenticationScreen() : AdminHome();
+            }
+            return Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
