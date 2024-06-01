@@ -99,15 +99,8 @@ class FirestoreService {
     });
   }
 
-  Stream<List<Map<String, dynamic>>> getMessagesForChat(String chatId) {
-    return _db.collection('chats').doc(chatId).snapshots().map((snapshot) {
-      final data = snapshot.data();
-      if (data != null && data.containsKey('messages')) {
-        final messages = List<Map<String, dynamic>>.from(data['messages']);
-        return messages;
-      }
-      return [];
-    });
+  Stream<DocumentSnapshot> getMessagesForChat(String chatId) {
+    return _db.collection('chats').doc(chatId).snapshots();
   }
 
   Stream<QuerySnapshot> getDistinctUsersWithMessages() {
