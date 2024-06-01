@@ -13,5 +13,5 @@ TildeSU Teacher is a Flutter application designed to help teachers manage and in
 
 1. Clone the repository:
    ```sh
-   git clone https://github.com/Abylaikhan-Bari/TildeSU_teacher.git
+   git clone https://gitlab.com/Abylaikhan-Bari/tildesu-teacher.git
    cd TildeSU_teacher
