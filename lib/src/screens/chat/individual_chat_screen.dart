@@ -52,31 +52,43 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
   }
 
   Widget _buildMessageItem(Map<String, dynamic> data) {
-    String messageText = data['message'] ?? 'No message';
+    String messageText = data['message'] ?? '';
     String senderEmail = data['senderEmail'] == 'Admin' ? 'Admin' : data['senderEmail'] ?? 'Unknown sender';
     bool isMe = data['senderId'] == 'admin';
     DateTime timestamp = (data['timestamp'] as Timestamp).toDate();
+    String? imageUrl = data['imageUrl'];
 
     return Container(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Column(
         crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-            margin: EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
-            decoration: BoxDecoration(
-              color: isMe ? Colors.green[100] : Colors.grey[200],
-              borderRadius: BorderRadius.circular(12),
+          if (imageUrl != null)
+            GestureDetector(
+              onTap: () => _showFullImage(imageUrl),
+              child: Image.network(
+                imageUrl,
+                width: 150,
+                height: 150,
+                fit: BoxFit.cover,
+              ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(senderEmail, style: TextStyle(fontWeight: FontWeight.bold)),
-                Text(messageText),
-              ],
+          if (messageText.isNotEmpty)
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+              margin: EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+              decoration: BoxDecoration(
+                color: isMe ? Colors.green[100] : Colors.grey[200],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(senderEmail, style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text(messageText),
+                ],
+              ),
             ),
-          ),
           Padding(
             padding: EdgeInsets.only(
               top: 2.0,
@@ -94,6 +106,15 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
     );
   }
 
+  void _showFullImage(String imageUrl) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FullImageScreen(imageUrl: imageUrl),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -104,35 +125,57 @@ class _IndividualChatScreenState extends State<IndividualChatScreen> {
       body: Column(
         children: <Widget>[
           Expanded(
-              child: StreamBuilder<DocumentSnapshot>(
-                stream: _firestore.collection('chats').doc(widget.chatId).snapshots(),
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
-                  if (snapshot.data == null || snapshot.data!.data() == null) {
-                    return Center(child: Text('No messages'));
-                  }
-                  var messages = List<Map<String, dynamic>>.from(snapshot.data!['messages']);
-                  return ListView.builder(
-                    itemCount: messages.length,
-                    itemBuilder: (context, index) => _buildMessageItem(messages[index]),
-                  );
-                },
-              )
+            child: StreamBuilder<DocumentSnapshot>(
+              stream: _firestore.collection('chats').doc(widget.chatId).snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
+                if (snapshot.data == null || snapshot.data!.data() == null) {
+                  return Center(child: Text('No messages'));
+                }
+                var messages = List<Map<String, dynamic>>.from(snapshot.data!['messages']);
+                return ListView.builder(
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) => _buildMessageItem(messages[index]),
+                );
+              },
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _controller,
-              decoration: InputDecoration(
-                labelText: 'Send a message...',
-                suffixIcon: IconButton(
-                  icon: Icon(Icons.send),
-                  onPressed: sendMessage,
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    decoration: InputDecoration(
+                      labelText: 'Send a message...',
+                      suffixIcon: IconButton(
+                        icon: Icon(Icons.send),
+                        onPressed: sendMessage,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class FullImageScreen extends StatelessWidget {
+  final String imageUrl;
+
+  FullImageScreen({required this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(),
+      body: Center(
+        child: Image.network(imageUrl),
       ),
     );
   }
