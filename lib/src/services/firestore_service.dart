@@ -87,7 +87,8 @@ class FirestoreService {
   Stream<List<UsefulTip>> getUsefulTips() {
     return _db.collection('usefulTips').snapshots().map(
           (snapshot) => snapshot.docs
-          .map((doc) => UsefulTip.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
+          .map((doc) => UsefulTip.fromFirestore(
+          doc.data() as Map<String, dynamic>, doc.id))
           .toList(),
     );
   }
