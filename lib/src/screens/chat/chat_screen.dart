@@ -3,8 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:tildesu_teacher/src/screens/chat/individual_chat_screen.dart';
 import 'package:tildesu_teacher/src/services/firestore_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:tildesu_teacher/src/services/auth_service.dart';
 
 class ChatScreen extends StatefulWidget {
   @override

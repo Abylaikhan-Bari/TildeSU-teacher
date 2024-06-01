@@ -23,9 +23,9 @@ class FirestoreService {
   Stream<List<Exercise>> getExercises() {
     return _db.collection('exercises').snapshots().map(
           (snapshot) => snapshot.docs
-              .map((doc) => Exercise.fromFirestore(doc.data(), doc.id))
-              .toList(),
-        );
+          .map((doc) => Exercise.fromFirestore(doc.data(), doc.id))
+          .toList(),
+    );
   }
 
   Future<void> addLesson(Lesson lesson, String level) async {
@@ -64,10 +64,10 @@ class FirestoreService {
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map((doc) => Lesson.fromFirestore(
-                  doc.data() as Map<String, dynamic>, doc.id))
-              .toList(),
-        );
+          .map((doc) => Lesson.fromFirestore(
+          doc.data() as Map<String, dynamic>, doc.id))
+          .toList(),
+    );
   }
 
   Future<void> addUsefulTip(UsefulTip tip) async {
@@ -91,18 +91,24 @@ class FirestoreService {
           .toList(),
     );
   }
+
   // Chat-related methods
   Future<void> sendMessage(String chatId, Map<String, dynamic> messageData) async {
-    await _db.collection('chats').doc(chatId).collection('messages').add(messageData);
+    await _db.collection('chats').doc(chatId).update({
+      'messages': FieldValue.arrayUnion([messageData])
+    });
   }
 
-  Stream<List<QueryDocumentSnapshot>> getMessagesForChat(String chatId) {
-    return _db.collection('chats').doc(chatId).collection('messages')
-        .orderBy('timestamp', descending: true)
-        .snapshots()
-        .map((snapshot) => snapshot.docs);  // Directly return List<QueryDocumentSnapshot>
+  Stream<List<Map<String, dynamic>>> getMessagesForChat(String chatId) {
+    return _db.collection('chats').doc(chatId).snapshots().map((snapshot) {
+      final data = snapshot.data();
+      if (data != null && data.containsKey('messages')) {
+        final messages = List<Map<String, dynamic>>.from(data['messages']);
+        return messages;
+      }
+      return [];
+    });
   }
-
 
   Stream<QuerySnapshot> getDistinctUsersWithMessages() {
     return _db.collection('chats').snapshots();

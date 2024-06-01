@@ -24,53 +24,38 @@ class IndividualChatScreen extends StatelessWidget {
       body: Column(
         children: <Widget>[
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance.collection('chats').snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator();
-                }
+              child: StreamBuilder<List<Map<String, dynamic>>>(
+                stream: firestoreService.getMessagesForChat(chatId),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator();
+                  }
 
-                if (snapshot.hasError) {
-                  return Text('Something went wrong: ${snapshot.error}');
-                }
+                  if (snapshot.hasError) {
+                    return Text('Something went wrong: ${snapshot.error}');
+                  }
 
-                if (snapshot.data == null || snapshot.data!.docs.isEmpty) {
-                  return Text("No messages available");
-                }
+                  if (snapshot.data == null || snapshot.data!.isEmpty) {
+                    return Text("No messages available");
+                  }
 
-                return ListView.builder(
-                  itemCount: snapshot.data!.docs.length,
-                  itemBuilder: (context, index) {
-                    DocumentSnapshot doc = snapshot.data!.docs[index];
-                    Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
+                  return ListView.builder(
+                    reverse: true,
+                    itemCount: snapshot.data!.length,
+                    itemBuilder: (context, index) {
+                      Map<String, dynamic> data = snapshot.data![index];
 
-                    if (data == null) {
-                      return ListTile(title: Text('Document data is not available'));
-                    }
+                      String message = data['message'] ?? 'No message';
+                      String senderEmail = data['senderEmail'] ?? 'Unknown sender';
 
-                    // Safely extracting fields with type checking
-                    String message = '';
-                    String senderEmail = '';
-                    if (data['message'] != null) {
-                      message = data['message'] is String ? data['message'] : 'Invalid data type for message';
-                    } else {
-                      message = 'No message';
-                    }
-                    if (data['senderEmail'] != null) {
-                      senderEmail = data['senderEmail'] is String ? data['senderEmail'] : 'Invalid data type for email';
-                    } else {
-                      senderEmail = 'Unknown sender';
-                    }
-
-                    return ListTile(
-                      title: Text(message),
-                      subtitle: Text(senderEmail),
-                    );
-                  },
-                );
-              },
-            )
+                      return ListTile(
+                        title: Text(message),
+                        subtitle: Text(senderEmail),
+                      );
+                    },
+                  );
+                },
+              )
           ),
           Padding(
             padding: EdgeInsets.all(8.0),
